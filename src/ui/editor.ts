@@ -1,26 +1,34 @@
 import { esc } from './dom';
+import { highlightLine } from './highlight';
 
 export interface EditorOptions {
   breakpoints?: boolean;
   placeholder?: string;
 }
 
-/** Editor di testo con numeri di riga, riga corrente, righe errate e breakpoint. */
+/**
+ * Editor con numeri di riga, sintassi colorata, riga corrente/ultima eseguita,
+ * righe errate e breakpoint. Il testo colorato sta in un livello sotto la textarea.
+ */
 export class CodeEditor {
   readonly textarea: HTMLTextAreaElement;
   readonly breakpoints = new Set<number>();
   errors = new Map<number, string>();
+  /** prossima istruzione da eseguire */
   current: number | null = null;
+  /** ultima istruzione eseguita */
+  last: number | null = null;
   onChange: (() => void) | null = null;
   onBreakpoints: (() => void) | null = null;
 
   private gutter: HTMLElement;
   private backdrop: HTMLElement;
-  private readonly lh = 20;
+  private readonly lh = 22;
 
   constructor(parent: HTMLElement, private opts: EditorOptions = {}) {
     parent.classList.add('editor');
-    parent.innerHTML = '<div class="gutter"></div><div class="backdrop"></div><textarea spellcheck="false" wrap="off" autocomplete="off" autocapitalize="off"></textarea>';
+    parent.innerHTML =
+      '<div class="gutter"></div><div class="backdrop"></div><textarea spellcheck="false" wrap="off" autocomplete="off" autocapitalize="off"></textarea>';
     this.gutter = parent.querySelector('.gutter')!;
     this.backdrop = parent.querySelector('.backdrop')!;
     this.textarea = parent.querySelector('textarea')!;
@@ -65,10 +73,11 @@ export class CodeEditor {
   }
 
   render() {
-    const n = this.lineCount;
+    const lines = this.textarea.value.split('\n');
     let g = '';
     let b = '';
-    for (let i = 1; i <= n; i++) {
+    lines.forEach((text, idx) => {
+      const i = idx + 1;
       const gc = ['gl'];
       const bc = ['bl'];
       if (this.breakpoints.has(i)) {
@@ -79,11 +88,18 @@ export class CodeEditor {
         gc.push('err');
         bc.push('err');
       }
-      if (this.current === i) bc.push('cur');
+      if (this.last === i) {
+        gc.push('last');
+        bc.push('last');
+      }
+      if (this.current === i) {
+        gc.push('cur');
+        bc.push('cur');
+      }
       g += `<div class="${gc.join(' ')}" data-line="${i}">${i}</div>`;
       const tip = this.errors.has(i) ? ` title="${esc(this.errors.get(i)!)}"` : '';
-      b += `<div class="${bc.join(' ')}"${tip}>&nbsp;</div>`;
-    }
+      b += `<div class="${bc.join(' ')}"${tip}>${highlightLine(text) || '&nbsp;'}</div>`;
+    });
     this.gutter.innerHTML = g;
     this.backdrop.innerHTML = b;
     this.syncScroll();
@@ -92,12 +108,13 @@ export class CodeEditor {
   private syncScroll() {
     this.gutter.scrollTop = this.textarea.scrollTop;
     this.backdrop.scrollTop = this.textarea.scrollTop;
+    this.backdrop.scrollLeft = this.textarea.scrollLeft;
   }
 
   scrollToLine(ln: number) {
     const t = this.textarea;
     const y = (ln - 1) * this.lh;
-    if (y < t.scrollTop || y > t.scrollTop + t.clientHeight - this.lh * 2) {
+    if (y < t.scrollTop || y > t.scrollTop + t.clientHeight - this.lh * 3) {
       t.scrollTop = Math.max(0, y - t.clientHeight / 2);
       this.syncScroll();
     }

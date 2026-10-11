@@ -49,10 +49,16 @@ export interface Segment {
 }
 
 export interface Symbol {
+  /** nome come scritto nel sorgente */
+  name?: string;
   type: 'data' | 'code' | 'const' | 'seg';
   seg?: string;
   value: number; // offset (data/code), valore (const), paragrafo (seg, risolto dopo il layout)
   size?: 1 | 2 | 4;
+  /** byte totali occupati (variabili dati) */
+  length?: number;
+  /** la definizione contiene una stringa tra apici */
+  text?: boolean;
 }
 
 export interface Program {
@@ -336,6 +342,7 @@ export function assemble(source: string): Program {
       err(no, `Simbolo già definito: ${name}`);
       return;
     }
+    sym.name = name;
     symbols.set(k, sym);
   };
   const advance = (n: number) => {
@@ -447,8 +454,10 @@ export function assemble(source: string): Program {
         const unit = dir === 'db' ? 1 : dir === 'dw' ? 2 : 4;
         if (!m[3].trim()) throw new AsmErr(`${dir.toUpperCase()} senza valori`);
         const off = segSizes.get(curSeg) ?? 0;
-        if (m[1]) defSymbol(no, m[1], { type: 'data', seg: curSeg, value: off, size: unit as 1 | 2 | 4 });
+        const sym: Symbol = { type: 'data', seg: curSeg, value: off, size: unit as 1 | 2 | 4, text: /["']/.test(m[3]) };
+        if (m[1]) defSymbol(no, m[1], sym);
         const size = dataSize(m[3], unit, consts);
+        sym.length = size;
         lines.push({ no, seg: curSeg, offset: off, kind: 'data', name: m[1], directive: dir, body: m[3], size });
         advance(size);
         return;

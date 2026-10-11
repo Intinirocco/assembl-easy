@@ -22,6 +22,31 @@ interface Snapshot {
 }
 
 const MAX_UNDO = 5000;
+const MAX_TRACE = 500;
+const REG16_NAMES = ['AX', 'CX', 'DX', 'BX', 'SP', 'BP', 'SI', 'DI'];
+const SEG_NAMES = ['ES', 'CS', 'SS', 'DS'];
+const FLAG_BITS: [string, number][] = [
+  ['CF', CF], ['PF', PF], ['AF', AF], ['ZF', ZF], ['SF', SF], ['TF', TF], ['IF', IF], ['DF', DF], ['OF', OF],
+];
+
+export interface TraceChange {
+  reg: string; // AX, AL, AH, SI, DS, ...
+  from: number;
+  to: number;
+  size: 8 | 16;
+}
+
+export interface TraceEntry {
+  n: number; // numero progressivo dell'istruzione
+  line: number | null; // riga del sorgente
+  text: string; // istruzione eseguita
+  changes: TraceChange[];
+  flags: { name: string; to: boolean }[];
+  mem: { addr: number; from: number[]; to: number[] }[];
+  out: string; // testo comparso a schermo
+  jump: number | null; // se ha saltato: offset di destinazione
+  error?: string;
+}
 
 function parity(v: number): boolean {
   let x = v & 0xff;
@@ -42,6 +67,10 @@ export class Machine {
   error: string | null = null;
   steps = 0;
   lastLine: number | null = null; // riga dell'ultima istruzione eseguita (per localizzare gli errori)
+  trace: TraceEntry[] = []; // cronologia delle ultime istruzioni, con ciò che hanno modificato
+  private curText = '';
+  private curLine: number | null = null;
+  private curNext: number | null = null;
 
   private input: string[] = [];
   private scanBuf = '';
@@ -74,6 +103,7 @@ export class Machine {
     this.error = null;
     this.steps = 0;
     this.lastLine = null;
+    this.trace = [];
     this.input = [];
     this.scanBuf = '';
     this.undo = [];
@@ -384,6 +414,7 @@ export class Machine {
     this.haltedFlag = false;
     this.snap = null;
     this.steps = Math.max(0, this.steps - 1);
+    this.trace.pop();
     return true;
   }
 
@@ -415,8 +446,58 @@ export class Machine {
     }
   }
 
+  private buildTrace(s: Snapshot): TraceEntry {
+    const changes: TraceChange[] = [];
+    for (let i = 0; i < 8; i++) {
+      const a = s.regs[i], b = this.regs[i];
+      if (a === b) continue;
+      if (i < 4 && (a >> 8) === (b >> 8)) changes.push({ reg: REG16_NAMES[i][0] + 'L', from: a & 0xff, to: b & 0xff, size: 8 });
+      else if (i < 4 && (a & 0xff) === (b & 0xff)) changes.push({ reg: REG16_NAMES[i][0] + 'H', from: a >> 8, to: b >> 8, size: 8 });
+      else changes.push({ reg: REG16_NAMES[i], from: a, to: b, size: 16 });
+    }
+    for (let i = 0; i < 4; i++) {
+      if (s.segs[i] !== this.segs[i] && i !== 1) changes.push({ reg: SEG_NAMES[i], from: s.segs[i], to: this.segs[i], size: 16 });
+    }
+    const flags = FLAG_BITS.filter(([, bit]) => (s.flags & bit) !== (this.flags & bit)).map(([name, bit]) => ({
+      name,
+      to: (this.flags & bit) !== 0,
+    }));
+    // scritture in memoria: indirizzi unici, raggruppati se contigui
+    const first = new Map<number, number>();
+    for (const [a, old] of this.writes) if (!first.has(a)) first.set(a, old);
+    const addrs = [...first.keys()].sort((x, y) => x - y);
+    const mem: TraceEntry['mem'] = [];
+    for (const a of addrs) {
+      const last = mem[mem.length - 1];
+      if (last && last.addr + last.to.length === a) {
+        last.from.push(first.get(a)!);
+        last.to.push(this.mem[a]);
+      } else mem.push({ addr: a, from: [first.get(a)!], to: [this.mem[a]] });
+    }
+    // gli indirizzi che non sono cambiati davvero non interessano
+    const realMem = mem.filter((m) => m.from.some((v, i) => v !== m.to[i]));
+    let out = '';
+    if (this.out.startsWith(s.out)) out = this.out.slice(s.out.length);
+    else if (this.out === '') out = '\u0000clear';
+    let jump: number | null = null;
+    if (this.curNext !== null && this.ip !== this.curNext) jump = this.ip;
+    return {
+      n: this.steps,
+      line: this.curLine,
+      text: this.curText,
+      changes,
+      flags,
+      mem: realMem,
+      out,
+      jump,
+      error: this.status === 'error' ? (this.error ?? undefined) : undefined,
+    };
+  }
+
   private commit() {
     if (!this.snap) return;
+    this.trace.push(this.buildTrace(this.snap));
+    if (this.trace.length > MAX_TRACE) this.trace.shift();
     this.snap.writes = this.writes;
     this.snap.consumed = this.consumed;
     this.undo.push(this.snap);
@@ -448,6 +529,9 @@ export class Machine {
   private exec(): boolean {
     // routine integrate di emu8086.inc
     if (this.ip >= BUILTIN_BASE_IP && this.ip < BUILTIN_BASE_IP + BUILTINS.length && this.cs === this.program.entryCS) {
+      this.curText = `${BUILTINS[this.ip - BUILTIN_BASE_IP]} (routine di emu8086.inc)`;
+      this.curLine = null;
+      this.curNext = null;
       return this.execBuiltin(BUILTINS[this.ip - BUILTIN_BASE_IP]);
     }
     const ins = this.program.instrs.get(this.lin(this.cs, this.ip));
@@ -463,6 +547,9 @@ export class Machine {
       return this.execRep(ins, next);
     }
     this.lastLine = ins.line;
+    this.curText = ins.text;
+    this.curLine = ins.line;
+    this.curNext = next;
     const before = this.ip;
     this.ip = next;
     const done = this.execInstr(ins);

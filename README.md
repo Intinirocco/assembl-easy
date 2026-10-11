@@ -9,12 +9,20 @@ moderna, senza installare nulla e con una sintassi compatibile con quella di emu
 
 ## Funzionalità attuali
 
-- **Editor** con numeri di riga, breakpoint (clic sul numero di riga) e riga corrente evidenziata.
+- **Editor** con sintassi colorata, numeri di riga, breakpoint (clic sul numero di riga), errori in rosso e
+  due marcatori: la **prossima** istruzione (indaco) e l'**ultima eseguita** (verde). Il programma viene
+  assemblato automaticamente mentre scrivi.
 - **Esecuzione**: Compila, Run, Single step, Step back (torna indietro di un'istruzione), Stop, Reset,
   velocità regolabile.
-- **Registri** (AX, BX, CX, DX con parte alta/bassa, SI, DI, BP, SP, CS, IP, SS, DS, ES) e **flag**,
-  con evidenziazione di ciò che cambia a ogni passo.
-- **Memoria** esadecimale con vista ASCII, navigabile per segmento e offset.
+- **Registri** a schede: AX/BX/CX/DX con parte alta e bassa, SI, DI, BP, SP, IP e segmenti; i valori modificati
+  si evidenziano in verde. **Clic su un registro** per il popup con esadecimale, decimale (con e senza segno),
+  binario bit per bit, ASCII e distinzione tra parte alta e bassa; da lì si può anche impostare un nuovo valore.
+- **Flag** (CF, ZF, SF, OF, PF, AF, DF, IF, TF) con descrizione al passaggio del mouse.
+- **Cosa è successo**: per ogni istruzione eseguita, i registri, flag e celle di memoria modificati, il testo
+  stampato e gli eventuali salti; cronologia delle ultime istruzioni cliccabile per tornare alla riga.
+- **Variabili**: tutte le variabili dichiarate con tipo, indirizzo e valore corrente (numeri, array, stringhe),
+  in decimale o esadecimale; clic su una variabile per vederla in memoria.
+- **Memoria** esadecimale con vista ASCII (le variabili sono evidenziate) e **Stack** con la cima indicata da SP.
 - **Schermo** console con input da tastiera.
 - **Errori di assemblaggio** evidenziati con una striscia rossa sulla riga e con un elenco cliccabile
   (istruzione sconosciuta, operandi di dimensione diversa, etichetta non definita, virgola mancante in `DB`, ecc.).

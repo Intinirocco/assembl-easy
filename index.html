@@ -15,54 +15,98 @@
         <a data-route="esercizi" href="#/esercizi">Esercizi</a>
         <a data-route="correzione" href="#/correzione">Correzione</a>
       </nav>
+
       <div id="view-emu" class="view">
-      <header class="toolbar">
-        <select id="examples" title="Carica un esempio"></select>
-        <button id="btn-open" title="Apri un file .asm">Apri</button>
-        <button id="btn-save" title="Scarica il codice come .asm">Salva</button>
-        <span class="sep"></span>
-        <button id="btn-compile" class="primary" title="Assembla (F9)">Compila</button>
-        <button id="btn-run" title="Esegui (F5)">▶ Run</button>
-        <button id="btn-step" title="Un'istruzione (F8)">⏭ Single step</button>
-        <button id="btn-back" title="Torna indietro di un'istruzione (Shift+F8)">⏮ Step back</button>
-        <button id="btn-stop" title="Ferma">⏹ Stop</button>
-        <button id="btn-reset" title="Riavvia il programma">⟲ Reset</button>
-        <label class="speed">Velocità
-          <input id="speed" type="range" min="0" max="4" value="4" />
-        </label>
-        <span id="status" class="status">—</span>
-      </header>
-      <main class="layout">
-        <section class="pane editor-pane">
-          <div class="pane-title">Codice sorgente</div>
-          <div id="editor-host"></div>
-          <div id="messages" class="messages"></div>
-        </section>
-        <aside class="side">
-          <section class="pane">
-            <div class="pane-title">Registri</div>
+        <header class="toolbar">
+          <div class="tb-group">
+            <select id="examples" title="Carica un esempio"></select>
+            <button id="btn-open" title="Apri un file .asm dal computer">Apri</button>
+            <button id="btn-save" title="Scarica il codice come .asm">Salva</button>
+          </div>
+          <div class="tb-group">
+            <button id="btn-compile" class="primary" title="Assembla il programma (F9)">Compila</button>
+          </div>
+          <div class="tb-group">
+            <button id="btn-run" class="go" title="Esegue fino alla fine o a un breakpoint (F5)">▶ Run</button>
+            <button id="btn-step" title="Esegue una sola istruzione (F8)">⏭ Single step</button>
+            <button id="btn-back" title="Annulla l'ultima istruzione (Shift+F8)">⏮ Step back</button>
+            <button id="btn-stop" title="Interrompe l'esecuzione">⏹ Stop</button>
+            <button id="btn-reset" title="Riporta il programma all'inizio">⟲ Reset</button>
+          </div>
+          <label class="tb-speed">Velocità
+            <select id="speed" title="Velocità di Run">
+              <option value="0">Lenta</option>
+              <option value="1">Media</option>
+              <option value="2">Veloce</option>
+              <option value="3">Molto veloce</option>
+              <option value="4" selected>Istantanea</option>
+            </select>
+          </label>
+          <span id="status" class="status">—</span>
+        </header>
+
+        <main class="emu">
+          <section class="pane p-editor">
+            <div class="pane-title">Codice sorgente
+              <span class="legend">
+                <i class="lg lg-cur"></i>prossima
+                <i class="lg lg-last"></i>ultima eseguita
+                <i class="lg lg-bp"></i>breakpoint (clic sul numero)
+              </span>
+            </div>
+            <div id="editor-host"></div>
+            <div id="messages" class="messages"></div>
+          </section>
+
+          <section class="pane p-regs">
+            <div class="pane-title">Registri <span class="hint">clic su un registro per i dettagli</span></div>
             <div id="regs" class="regs"></div>
             <div id="flags" class="flags"></div>
           </section>
-          <section class="pane">
-            <div class="pane-title">Memoria
-              <span class="mem-controls">
-                <select id="mem-seg">
-                  <option value="ds">DS</option><option value="es">ES</option>
-                  <option value="ss">SS</option><option value="cs">CS</option>
-                </select>
-                <input id="mem-off" value="0000" maxlength="4" spellcheck="false" />
+
+          <div class="bottom">
+            <section class="pane p-log">
+              <div class="pane-title">Cosa è successo</div>
+              <div id="last-step" class="last-step"></div>
+              <div id="log" class="log"></div>
+            </section>
+            <section class="pane console-pane">
+              <div class="pane-title">Schermo <span id="input-hint" class="hint"></span></div>
+              <pre id="console" class="console" tabindex="0"></pre>
+            </section>
+          </div>
+
+          <section class="pane p-data">
+            <div class="pane-title tabs">
+              <button class="tab on" data-tab="vars">Variabili</button>
+              <button class="tab" data-tab="mem">Memoria</button>
+              <button class="tab" data-tab="stack">Stack</button>
+              <span class="spacer"></span>
+              <span id="vars-fmt" class="seg">
+                <button data-fmt="dec" class="on">Dec</button><button data-fmt="hex">Hex</button>
               </span>
             </div>
-            <div id="mem" class="mem"></div>
+            <div class="tab-body" data-body="vars"><div id="vars" class="vars"></div></div>
+            <div class="tab-body" data-body="mem" hidden>
+              <div class="mem-controls">
+                <label>Segmento
+                  <select id="mem-seg">
+                    <option value="data" selected>Dati del programma</option>
+                    <option value="ds">DS</option><option value="es">ES</option>
+                    <option value="ss">SS</option><option value="cs">CS</option>
+                  </select>
+                </label>
+                <label>Offset
+                  <input id="mem-off" value="0000" maxlength="4" spellcheck="false" />
+                </label>
+              </div>
+              <div id="mem" class="mem"></div>
+            </div>
+            <div class="tab-body" data-body="stack" hidden><div id="stack" class="stackview"></div></div>
           </section>
-          <section class="pane console-pane">
-            <div class="pane-title">Schermo <span id="input-hint" class="hint"></span></div>
-            <pre id="console" class="console" tabindex="0"></pre>
-          </section>
-        </aside>
-      </main>
+        </main>
       </div>
+
       <div id="view-page" class="view page" hidden></div>
     </div>
     <input id="file-input" type="file" accept=".asm,.txt" hidden />
