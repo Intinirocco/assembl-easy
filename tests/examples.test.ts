@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { EXAMPLES } from '../src/content/examples';
+import { EXAMPLES, EXAMPLE_TAGS, exampleTags } from '../src/content/examples';
 import { assemble } from '../src/emu/assembler';
 import { Machine } from '../src/emu/cpu';
 
@@ -31,4 +31,21 @@ describe('esempi spiegati', () => {
       }
     });
   }
+});
+
+describe('tag degli esempi', () => {
+  it('ogni esempio ha la sua categoria tra i tag e i tag sono tutti nell\'elenco dei filtri', () => {
+    for (const e of EXAMPLES) {
+      const tags = exampleTags(e);
+      expect(tags).toContain(e.category);
+      for (const t of tags) expect(EXAMPLE_TAGS).toContain(t);
+    }
+  });
+
+  it('l\'intersezione di due tag restringe i risultati', () => {
+    const both = EXAMPLES.filter((e) => exampleTags(e).includes('Variabili') && exampleTags(e).includes('Registri'));
+    const one = EXAMPLES.filter((e) => exampleTags(e).includes('Variabili'));
+    expect(both.length).toBeGreaterThan(0);
+    expect(both.length).toBeLessThan(one.length);
+  });
 });

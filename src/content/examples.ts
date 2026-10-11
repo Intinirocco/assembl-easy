@@ -479,4 +479,40 @@ end start
   },
 ];
 
+/** Argomenti aggiuntivi oltre alla categoria principale: servono ai filtri (intersezione). */
+const EXTRA_TAGS: Record<string, string[]> = {
+  'mov-base': ['Registri'],
+  'add-sub': ['Variabili', 'Registri'],
+  'inc-dec-neg': ['Registri'],
+  'mul-div': ['Variabili', 'Registri'],
+  variabili: ['Operazioni base'],
+  'offset-lea': ['Memoria e indirizzi'],
+  array: ['Array', 'Memoria e indirizzi'],
+  'cmp-je': ['Input/Output'],
+  'segno-senza-segno': ['Con e senza segno', 'Input/Output'],
+  'if-else': ['Variabili'],
+  'loop-stampa': ['Input/Output'],
+  'while-somma': ['Salti condizionati', 'Operazioni base'],
+  'push-pop': ['Registri'],
+  'call-ret': ['Variabili', 'Operazioni base'],
+  'io-stringa': ['Stringhe', 'Memoria e indirizzi'],
+  'io-numeri': ['Operazioni base'],
+};
+
+export function exampleTags(e: Example): string[] {
+  return [...new Set([e.category, ...(EXTRA_TAGS[e.id] ?? [])])];
+}
+
 export const EXAMPLE_CATEGORIES = [...new Set(EXAMPLES.map((e) => e.category))];
+
+const TAG_ORDER = [
+  ...EXAMPLE_CATEGORIES,
+  'Registri',
+  'Memoria e indirizzi',
+  'Array',
+  'Stringhe',
+  'Con e senza segno',
+];
+export const EXAMPLE_TAGS = [...new Set(EXAMPLES.flatMap(exampleTags))].sort(
+  (a, b) => TAG_ORDER.indexOf(a) - TAG_ORDER.indexOf(b),
+);

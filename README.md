@@ -22,9 +22,9 @@ moderna, senza installare nulla e con una sintassi compatibile con quella di emu
 
 ### Sezioni didattiche
 
-- **Esempi spiegati** (`#/esempi`): 17 programmi completi per argomento (operazioni base, variabili,
-  salti condizionati, cicli, stack e procedure, input/output) con spiegazione delle righe chiave e pulsante
-  "Apri nell'emulatore". Ogni esempio è verificato da un test automatico.
+- **Esempi spiegati** (`#/esempi`): 17 programmi completi, raggruppati per argomento, con filtri a selezione
+  multipla (si vedono solo gli esempi che hanno *tutti* gli argomenti scelti). Un clic su un box apre il riquadro con
+  codice, spiegazione delle righe chiave e pulsante "Apri nell'emulatore". Ogni esempio è verificato da un test automatico.
 - **Wiki delle istruzioni** (`#/wiki`): per ogni istruzione e direttiva sintassi, operandi ammessi, flag modificati,
   esempio e note; con ricerca e filtro per categoria. Link diretti del tipo `#/wiki/mov`.
 - **Esercizi** (`#/esercizi`): 19 esercizi con consegna, suggerimenti, soluzione nascosta e
