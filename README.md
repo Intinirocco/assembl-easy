@@ -27,7 +27,7 @@ moderna, senza installare nulla e con una sintassi compatibile con quella di emu
   codice, spiegazione delle righe chiave e pulsante "Apri nell'emulatore". Ogni esempio è verificato da un test automatico.
 - **Wiki delle istruzioni** (`#/wiki`): per ogni istruzione e direttiva sintassi, operandi ammessi, flag modificati,
   esempio e note; con ricerca e filtro per categoria. Link diretti del tipo `#/wiki/mov`.
-- **Esercizi** (`#/esercizi`): 19 esercizi con consegna, suggerimenti, soluzione nascosta e
+- **Esercizi** (`#/esercizi`): 19 esercizi, filtrabili per argomenti (selezione multipla, intersezione) e difficoltà, con consegna, suggerimenti, soluzione nascosta e
   **correzione automatica**: il programma viene eseguito su più casi di prova (valori iniziali, input da tastiera,
   variabili/registri/output attesi) e il sito mostra quali falliscono. I progressi sono salvati nel browser.
 - **Correzione** (`#/correzione`): si incolla il codice e si sceglie un esercizio del catalogo oppure si

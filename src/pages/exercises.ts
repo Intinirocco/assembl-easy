@@ -1,4 +1,4 @@
-import { EXERCISES, EXERCISE_CATEGORIES, solutionCode, starterCode, type Exercise } from '../content/exercises';
+import { EXERCISES, EXERCISE_TAGS, exerciseTags, solutionCode, starterCode, type Exercise } from '../content/exercises';
 import { gradeProgram } from '../emu/grader';
 import { openInEmulator } from '../bus';
 import { esc, inline, store } from '../ui/dom';
@@ -12,6 +12,16 @@ function levelDots(l: number) {
   return `<span class="level l${l}" title="${LEVELS[l]}">${'●'.repeat(l)}${'○'.repeat(3 - l)}</span>`;
 }
 
+// I filtri attivi sopravvivono al passaggio elenco → esercizio → elenco.
+const selectedTags = new Set<string>();
+const selectedLevels = new Set<number>();
+
+function matches(e: Exercise): boolean {
+  const tags = exerciseTags(e);
+  if (![...selectedTags].every((t) => tags.includes(t))) return false; // intersezione degli argomenti
+  return selectedLevels.size === 0 || selectedLevels.has(e.level);
+}
+
 export function renderExerciseList(root: HTMLElement) {
   const completed = new Set(done.get());
   root.innerHTML = `
@@ -21,32 +31,68 @@ export function renderExerciseList(root: HTMLElement) {
       ${completed.size}/${EXERCISES.length} completati.</p>
     </div>
     <div class="filters">
-      <div class="chips" id="ex-cats">
-        <button class="chip on" data-cat="">Tutti</button>
-        ${EXERCISE_CATEGORIES.map((c) => `<button class="chip" data-cat="${esc(c)}">${esc(c)}</button>`).join('')}
+      <div class="filter-row"><span class="filter-label">Argomenti</span>
+        <div class="chips" id="ex-tags">
+          <button class="chip" data-tag="">Tutti</button>
+          ${EXERCISE_TAGS.map((t) => `<button class="chip" data-tag="${esc(t)}">${esc(t)}</button>`).join('')}
+        </div>
       </div>
+      <div class="filter-row"><span class="filter-label">Difficoltà</span>
+        <div class="chips" id="ex-levels">
+          <button class="chip" data-level="0">Tutte</button>
+          ${[1, 2, 3].map((l) => `<button class="chip" data-level="${l}">${LEVELS[l]}</button>`).join('')}
+        </div>
+      </div>
+      <div class="muted small" id="ex-count"></div>
     </div>
-    <div class="ex-grid" id="ex-grid"></div>`;
+    <div class="ex-grid" id="ex-grid"></div>
+    <p id="ex-empty" class="empty" hidden>Nessun esercizio ha tutti gli argomenti selezionati. Togli un filtro.</p>`;
+
   const grid = root.querySelector<HTMLElement>('#ex-grid')!;
-  const draw = (cat: string) => {
-    grid.innerHTML = EXERCISES.filter((e) => !cat || e.category === cat)
-      .map(
-        (e) => `<a class="ex-card${completed.has(e.id) ? ' done' : ''}" href="#/esercizi/${e.id}">
+  const draw = () => {
+    const list = EXERCISES.filter(matches);
+    grid.innerHTML = list
+      .map((e) => {
+        const extra = exerciseTags(e).filter((t) => t !== e.category);
+        return `<a class="ex-card${completed.has(e.id) ? ' done' : ''}" href="#/esercizi/${e.id}">
           <span class="ex-cat">${esc(e.category)}</span>
           <strong>${esc(e.title)}</strong>
+          ${extra.length ? `<span class="tags">${extra.map((t) => `<span class="tag">${esc(t)}</span>`).join('')}</span>` : ''}
           <span class="ex-meta">${levelDots(e.level)} ${completed.has(e.id) ? '<span class="ex-done">✓ Completato</span>' : ''}</span>
-        </a>`,
-      )
+        </a>`;
+      })
       .join('');
+    (root.querySelector('#ex-empty') as HTMLElement).hidden = list.length > 0;
+    (root.querySelector('#ex-count') as HTMLElement).textContent = `${list.length} di ${EXERCISES.length} esercizi`;
+    root.querySelectorAll<HTMLButtonElement>('#ex-tags .chip').forEach((c) => {
+      const t = c.dataset.tag ?? '';
+      c.classList.toggle('on', t === '' ? selectedTags.size === 0 : selectedTags.has(t));
+    });
+    root.querySelectorAll<HTMLButtonElement>('#ex-levels .chip').forEach((c) => {
+      const l = Number(c.dataset.level);
+      c.classList.toggle('on', l === 0 ? selectedLevels.size === 0 : selectedLevels.has(l));
+    });
   };
-  draw('');
-  const chips = root.querySelectorAll<HTMLButtonElement>('.chip');
-  chips.forEach((c) =>
-    c.addEventListener('click', () => {
-      chips.forEach((x) => x.classList.toggle('on', x === c));
-      draw(c.dataset.cat ?? '');
-    }),
-  );
+
+  root.querySelector('#ex-tags')!.addEventListener('click', (e) => {
+    const b = (e.target as HTMLElement).closest('.chip') as HTMLButtonElement | null;
+    if (!b) return;
+    const t = b.dataset.tag ?? '';
+    if (t === '') selectedTags.clear();
+    else if (selectedTags.has(t)) selectedTags.delete(t);
+    else selectedTags.add(t);
+    draw();
+  });
+  root.querySelector('#ex-levels')!.addEventListener('click', (e) => {
+    const b = (e.target as HTMLElement).closest('.chip') as HTMLButtonElement | null;
+    if (!b) return;
+    const l = Number(b.dataset.level);
+    if (l === 0) selectedLevels.clear();
+    else if (selectedLevels.has(l)) selectedLevels.delete(l);
+    else selectedLevels.add(l);
+    draw();
+  });
+  draw();
 }
 
 export function renderExercise(root: HTMLElement, id: string) {

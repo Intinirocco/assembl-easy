@@ -301,7 +301,7 @@ export const EXERCISES: Exercise[] = [
   {
     id: 'procedura-quadrato',
     title: 'Procedura che calcola il quadrato',
-    category: 'Procedure',
+    category: 'Stack e procedure',
     level: 3,
     text: 'Scrivi una procedura `calcola` che riceve un numero in AL e restituisce in AX il suo quadrato. Chiamala con `call` per calcolare il quadrato del byte `n` e salvalo nella word `quadrato`. La procedura va scritta dopo il codice principale, prima di `ends`.',
     hints: ['Dichiara la procedura con `calcola proc` ... `ret` ... `calcola endp`.', 'Il codice principale termina con `int 21h`: la procedura va scritta dopo.'],
@@ -336,3 +336,38 @@ export const EXERCISES: Exercise[] = [
 ];
 
 export const EXERCISE_CATEGORIES = [...new Set(EXERCISES.map((e) => e.category))];
+
+/** Argomenti aggiuntivi oltre alla categoria principale: servono ai filtri (intersezione). */
+const EXTRA_TAGS: Record<string, string[]> = {
+  'somma-due-numeri': ['Variabili', 'Registri'],
+  differenza: ['Variabili', 'Registri', 'Con e senza segno'],
+  'prodotto-byte': ['Variabili', 'Registri'],
+  'quoziente-resto': ['Variabili', 'Registri'],
+  scambio: ['Variabili', 'Registri'],
+  'massimo-due': ['Variabili', 'Con e senza segno'],
+  'pari-dispari': ['Variabili', 'Operazioni logiche'],
+  'valore-assoluto': ['Variabili', 'Con e senza segno', 'Operazioni base'],
+  'somma-1-n': ['Variabili', 'Registri', 'Operazioni base'],
+  fattoriale: ['Variabili', 'Operazioni base'],
+  'conto-alla-rovescia': ['Input/Output'],
+  'somma-array': ['Cicli', 'Variabili', 'Memoria e indirizzi'],
+  'massimo-array': ['Cicli', 'Salti condizionati', 'Memoria e indirizzi'],
+  'lunghezza-stringa': ['Cicli', 'Salti condizionati', 'Variabili', 'Memoria e indirizzi'],
+  'ciao-mondo': ['Variabili', 'Stringhe'],
+  maiuscolo: ['Operazioni base'],
+  'somma-cifre': ['Operazioni base'],
+  'procedura-quadrato': ['Operazioni base', 'Variabili'],
+  'bit-a-uno': ['Cicli', 'Variabili', 'Registri'],
+};
+
+export function exerciseTags(e: Exercise): string[] {
+  return [...new Set([e.category, ...(EXTRA_TAGS[e.id] ?? [])])];
+}
+
+const TAG_ORDER = [
+  'Operazioni base', 'Variabili', 'Registri', 'Memoria e indirizzi', 'Array', 'Stringhe',
+  'Salti condizionati', 'Con e senza segno', 'Cicli', 'Operazioni logiche', 'Stack e procedure', 'Input/Output',
+];
+export const EXERCISE_TAGS = [...new Set(EXERCISES.flatMap(exerciseTags))].sort(
+  (a, b) => TAG_ORDER.indexOf(a) - TAG_ORDER.indexOf(b),
+);
