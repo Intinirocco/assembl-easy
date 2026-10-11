@@ -21,27 +21,6 @@ function cardHtml(e: Example): string {
   </a>`;
 }
 
-function panelHtml(e: Example): string {
-  return `<div class="modal-head">
-      <div>
-        <span class="ex-cat">${esc(e.category)}</span>
-        <h2 id="ex-modal-title">${esc(e.title)}</h2>
-      </div>
-      <button class="modal-close" aria-label="Chiudi" data-close>✕</button>
-    </div>
-    <p>${inline(e.summary)}</p>
-    <pre class="code">${highlight(e.code)}</pre>
-    <div class="card-actions">
-      <button class="primary" data-open>Apri nell'emulatore</button>
-      <button data-copy>Copia codice</button>
-    </div>
-    <h4>Spiegazione</h4>
-    <ul class="notes">${e.notes
-      .map((n) => `<li><code>${esc(n.code)}</code><span>${inline(n.text)}</span></li>`)
-      .join('')}</ul>
-    <div class="result"><b>Risultato.</b> ${inline(e.result)}</div>`;
-}
-
 function drawGrid(root: HTMLElement) {
   const grid = root.querySelector<HTMLElement>('#exs-grid')!;
   const list = EXAMPLES.filter(matches);
@@ -64,59 +43,7 @@ function drawChips(root: HTMLElement) {
   });
 }
 
-let escHandler: ((e: KeyboardEvent) => void) | null = null;
-
-function closeModal(root: HTMLElement) {
-  root.querySelector('#ex-modal')?.remove();
-  document.body.classList.remove('modal-open');
-  if (escHandler) {
-    document.removeEventListener('keydown', escHandler);
-    escHandler = null;
-  }
-}
-
-/** Mostra (o chiude, se id è assente) il riquadro di dettaglio senza ridisegnare la pagina. */
-export function syncExampleParam(root: HTMLElement, id?: string) {
-  closeModal(root);
-  const ex = EXAMPLES.find((e) => e.id === id);
-  if (!ex) return;
-  const overlay = document.createElement('div');
-  overlay.id = 'ex-modal';
-  overlay.className = 'modal-overlay';
-  overlay.innerHTML = `<div class="modal" role="dialog" aria-modal="true" aria-labelledby="ex-modal-title">${panelHtml(ex)}</div>`;
-  root.appendChild(overlay);
-  document.body.classList.add('modal-open');
-
-  const close = () => {
-    location.hash = '#/esempi';
-  };
-  overlay.addEventListener('click', (e) => {
-    const t = e.target as HTMLElement;
-    if (t === overlay || t.closest('[data-close]')) close();
-  });
-  escHandler = (e) => {
-    if (e.key === 'Escape') close();
-  };
-  document.addEventListener('keydown', escHandler);
-
-  overlay.querySelector('[data-open]')!.addEventListener('click', () => {
-    closeModal(root);
-    openInEmulator(ex.code);
-  });
-  const copy = overlay.querySelector<HTMLButtonElement>('[data-copy]')!;
-  copy.addEventListener('click', async () => {
-    try {
-      await navigator.clipboard.writeText(ex.code);
-      copy.textContent = 'Copiato ✓';
-    } catch {
-      copy.textContent = 'Copia non riuscita';
-    }
-    setTimeout(() => (copy.textContent = 'Copia codice'), 1500);
-  });
-  overlay.querySelector<HTMLElement>('.modal')!.focus();
-}
-
-export function renderExamples(root: HTMLElement, param?: string) {
+function renderList(root: HTMLElement) {
   root.innerHTML = `
     <div class="page-head">
       <h1>Esempi spiegati</h1>
@@ -146,5 +73,51 @@ export function renderExamples(root: HTMLElement, param?: string) {
 
   drawChips(root);
   drawGrid(root);
-  syncExampleParam(root, param);
+}
+
+function renderDetail(root: HTMLElement, ex: Example) {
+  const idx = EXAMPLES.indexOf(ex);
+  const next = EXAMPLES[idx + 1];
+  const prev = EXAMPLES[idx - 1];
+  root.innerHTML = `
+    <div class="crumbs"><a class="back" href="#/esempi">← Tutti gli esempi</a> · ${esc(ex.category)}</div>
+    <article class="detail">
+      <h1>${esc(ex.title)}</h1>
+      <p class="lead">${inline(ex.summary)}</p>
+      <pre class="code">${highlight(ex.code)}</pre>
+      <div class="card-actions">
+        <button class="primary" id="ex-open">Apri nell'emulatore</button>
+        <button id="ex-copy">Copia codice</button>
+      </div>
+      <h4>Spiegazione</h4>
+      <ul class="notes">${ex.notes
+        .map((n) => `<li><code>${esc(n.code)}</code><span>${inline(n.text)}</span></li>`)
+        .join('')}</ul>
+      <div class="result"><b>Risultato.</b> ${inline(ex.result)}</div>
+      <nav class="pager">
+        ${prev ? `<a href="#/esempi/${prev.id}">← ${esc(prev.title)}</a>` : '<span></span>'}
+        <a class="back" href="#/esempi">Tutti gli esempi</a>
+        ${next ? `<a href="#/esempi/${next.id}">${esc(next.title)} →</a>` : '<span></span>'}
+      </nav>
+    </article>`;
+
+  root.querySelector('#ex-open')!.addEventListener('click', () => openInEmulator(ex.code));
+  const copy = root.querySelector<HTMLButtonElement>('#ex-copy')!;
+  copy.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(ex.code);
+      copy.textContent = 'Copiato ✓';
+    } catch {
+      copy.textContent = 'Copia non riuscita';
+    }
+    setTimeout(() => (copy.textContent = 'Copia codice'), 1500);
+  });
+}
+
+export function renderExamples(root: HTMLElement, param?: string) {
+  const ex = EXAMPLES.find((e) => e.id === param);
+  if (ex) renderDetail(root, ex);
+  else if (param) {
+    root.innerHTML = `<div class="page-head"><h1>Esempio non trovato</h1><p><a href="#/esempi">Torna all'elenco</a></p></div>`;
+  } else renderList(root);
 }

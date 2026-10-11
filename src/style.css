@@ -239,15 +239,14 @@ input[type=search], .page input[type=text], .page input:not([type]), .page selec
 .ex-grid + h2.cat { margin-top: 24px; }
 h2.cat + .ex-grid { margin-top: 0; }
 
-.modal-overlay { position: fixed; inset: 0; z-index: 50; background: rgba(15, 18, 28, 0.55); display: flex; align-items: flex-start; justify-content: center; padding: 4vh 16px; overflow: auto; }
-.modal { position: relative; width: min(920px, 100%); background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 20px 24px 24px; box-shadow: 0 20px 60px rgba(0, 0, 0, .35); outline: 0; }
-.modal-head { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
-.modal-head h2 { margin: 2px 0 6px; font-size: 22px; }
-.modal-close { border: 0; background: transparent; font-size: 18px; line-height: 1; padding: 6px 8px; color: var(--muted); }
-.modal-close:hover { color: var(--text); background: var(--bg); }
-.modal h4 { margin: 16px 0 6px; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
-.modal .notes { margin: 0; }
-body.modal-open { overflow: hidden; }
+/* pagina di dettaglio di un esempio */
+.detail { max-width: 920px; }
+.detail .lead { color: var(--muted); max-width: 70ch; }
+.detail h4 { margin: 20px 0 6px; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+.crumbs .back, .pager .back { font-weight: 500; }
+.pager { display: flex; justify-content: space-between; gap: 12px; margin-top: 28px; padding-top: 14px; border-top: 1px solid var(--border); }
+.pager a { color: var(--accent); text-decoration: none; }
+.pager a:hover { text-decoration: underline; }
 
 .filter-row { display: flex; gap: 12px; align-items: baseline; }
 .filter-label { flex: none; width: 84px; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
