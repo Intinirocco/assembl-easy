@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Assembl-Easy · Emulatore 8086</title>
+  </head>
+  <body>
+    <div id="app">
+      <header class="toolbar">
+        <span class="brand">Assembl<b>Easy</b> <small>8086</small></span>
+        <select id="examples" title="Carica un esempio"></select>
+        <button id="btn-open" title="Apri un file .asm">Apri</button>
+        <button id="btn-save" title="Scarica il codice come .asm">Salva</button>
+        <span class="sep"></span>
+        <button id="btn-compile" class="primary" title="Assembla (F9)">Compila</button>
+        <button id="btn-run" title="Esegui (F5)">▶ Run</button>
+        <button id="btn-step" title="Un'istruzione (F8)">⏭ Single step</button>
+        <button id="btn-back" title="Torna indietro di un'istruzione (Shift+F8)">⏮ Step back</button>
+        <button id="btn-stop" title="Ferma">⏹ Stop</button>
+        <button id="btn-reset" title="Riavvia il programma">⟲ Reset</button>
+        <label class="speed">Velocità
+          <input id="speed" type="range" min="0" max="4" value="4" />
+        </label>
+        <span id="status" class="status">—</span>
+      </header>
+      <main class="layout">
+        <section class="pane editor-pane">
+          <div class="pane-title">Codice sorgente</div>
+          <div class="editor" id="editor">
+            <div class="gutter" id="gutter"></div>
+            <div class="backdrop" id="backdrop"></div>
+            <textarea id="code" spellcheck="false" wrap="off" autocomplete="off" autocapitalize="off"></textarea>
+          </div>
+          <div id="messages" class="messages"></div>
+        </section>
+        <aside class="side">
+          <section class="pane">
+            <div class="pane-title">Registri</div>
+            <div id="regs" class="regs"></div>
+            <div id="flags" class="flags"></div>
+          </section>
+          <section class="pane">
+            <div class="pane-title">Memoria
+              <span class="mem-controls">
+                <select id="mem-seg">
+                  <option value="ds">DS</option><option value="es">ES</option>
+                  <option value="ss">SS</option><option value="cs">CS</option>
+                </select>
+                <input id="mem-off" value="0000" maxlength="4" spellcheck="false" />
+              </span>
+            </div>
+            <div id="mem" class="mem"></div>
+          </section>
+          <section class="pane console-pane">
+            <div class="pane-title">Schermo <span id="input-hint" class="hint"></span></div>
+            <pre id="console" class="console" tabindex="0"></pre>
+          </section>
+        </aside>
+      </main>
+    </div>
+    <input id="file-input" type="file" accept=".asm,.txt" hidden />
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
