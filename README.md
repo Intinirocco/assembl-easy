@@ -20,6 +20,23 @@ moderna, senza installare nulla e con una sintassi compatibile con quella di emu
   (istruzione sconosciuta, operandi di dimensione diversa, etichetta non definita, virgola mancante in `DB`, ecc.).
 - Apri/salva file `.asm` e alcuni programmi di esempio.
 
+### Sezioni didattiche
+
+- **Esempi spiegati** (`#/esempi`): 17 programmi completi per argomento (operazioni base, variabili,
+  salti condizionati, cicli, stack e procedure, input/output) con spiegazione delle righe chiave e pulsante
+  "Apri nell'emulatore". Ogni esempio è verificato da un test automatico.
+- **Wiki delle istruzioni** (`#/wiki`): per ogni istruzione e direttiva sintassi, operandi ammessi, flag modificati,
+  esempio e note; con ricerca e filtro per categoria. Link diretti del tipo `#/wiki/mov`.
+- **Esercizi** (`#/esercizi`): 19 esercizi con consegna, suggerimenti, soluzione nascosta e
+  **correzione automatica**: il programma viene eseguito su più casi di prova (valori iniziali, input da tastiera,
+  variabili/registri/output attesi) e il sito mostra quali falliscono. I progressi sono salvati nel browser.
+- **Correzione** (`#/correzione`): si incolla il codice e si sceglie un esercizio del catalogo oppure si
+  definiscono i propri casi di prova. Le righe con errori di assemblaggio o di esecuzione (divisione per zero,
+  ciclo infinito, …) sono evidenziate in rosso.
+
+La correzione è **deterministica e senza servizi esterni**: nessun costo e nessun backend. Non verifica la
+"bellezza" del codice, ma che produca i risultati attesi.
+
 ### Cosa viene emulato
 
 - Formato classico di emu8086: `data segment … ends`, `stack segment`, `code segment`, `start:`, `end start`
@@ -40,10 +57,9 @@ moderna, senza installare nulla e con una sintassi compatibile con quella di emu
 
 ## Roadmap
 
-1. Sezione di **esempi spiegati**, per argomento (operazioni base, salti condizionati, variabili, …).
-2. **Wiki delle istruzioni**: sintassi, operandi ammessi, flag modificati, esempi.
-3. **Esercizi** con consegna e **correzione automatica** tramite test (input → output/registri attesi),
-   con evidenziazione delle righe errate. Nessun servizio a pagamento né backend.
+1. Più esempi ed esercizi (stringhe, array bidimensionali, procedure con parametri sullo stack, …).
+2. Grafica e miglioramento delle funzionalità dell'emulatore.
+3. Eventuale commento automatico degli errori logici con un modello linguistico (opzionale, richiederebbe un backend).
 
 ## Sviluppo
 
@@ -62,9 +78,18 @@ Struttura:
 | --- | --- |
 | `src/emu/assembler.ts` | assemblatore a due passate, errori con numero di riga |
 | `src/emu/cpu.ts` | CPU 8086, flag, stack, mini-DOS e routine di `emu8086.inc` |
-| `src/main.ts`, `src/style.css` | interfaccia |
-| `src/examples/` | programmi di esempio caricabili dall'interfaccia |
-| `tests/` | test (Vitest) con i programmi di lezione come fixture |
+| `src/emu/grader.ts` | correttore: esegue un programma su casi di prova e confronta i risultati |
+| `src/content/` | contenuti didattici: `examples.ts`, `instructions.ts` (wiki), `exercises.ts` |
+| `src/pages/` | pagine: emulatore, esempi, wiki, esercizi, correzione |
+| `src/ui/` | componenti condivisi (editor con righe evidenziate, evidenziazione sintassi, report) |
+| `src/main.ts`, `src/style.css` | router e stile |
+| `tests/` | test (Vitest): programmi di lezione, esempi, esercizi con le loro soluzioni, wiki |
+
+### Aggiungere un esercizio
+
+In `src/content/exercises.ts` aggiungi un elemento a `EXERCISES`: `data` (dichiarazioni), `solutionBody`
+(soluzione di riferimento) e `tests` (valori iniziali `init`, `input`, e attese `vars`/`regs`/`output`).
+`npm test` verifica che la soluzione superi tutti i test e che il codice di partenza no.
 
 ## Pubblicazione
 

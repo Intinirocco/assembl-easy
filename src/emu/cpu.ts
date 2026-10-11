@@ -41,6 +41,7 @@ export class Machine {
   status: Status = 'ready';
   error: string | null = null;
   steps = 0;
+  lastLine: number | null = null; // riga dell'ultima istruzione eseguita (per localizzare gli errori)
 
   private input: string[] = [];
   private scanBuf = '';
@@ -72,6 +73,7 @@ export class Machine {
     this.status = 'ready';
     this.error = null;
     this.steps = 0;
+    this.lastLine = null;
     this.input = [];
     this.scanBuf = '';
     this.undo = [];
@@ -460,6 +462,7 @@ export class Machine {
     if (ins.prefix && ['rep', 'repe', 'repz', 'repne', 'repnz'].includes(ins.prefix)) {
       return this.execRep(ins, next);
     }
+    this.lastLine = ins.line;
     const before = this.ip;
     this.ip = next;
     const done = this.execInstr(ins);

@@ -7,8 +7,16 @@
   </head>
   <body>
     <div id="app">
+      <nav class="topnav">
+        <a class="brand" href="#/emulatore">Assembl<b>Easy</b> <small>8086</small></a>
+        <a data-route="emulatore" href="#/emulatore">Emulatore</a>
+        <a data-route="esempi" href="#/esempi">Esempi</a>
+        <a data-route="wiki" href="#/wiki">Wiki istruzioni</a>
+        <a data-route="esercizi" href="#/esercizi">Esercizi</a>
+        <a data-route="correzione" href="#/correzione">Correzione</a>
+      </nav>
+      <div id="view-emu" class="view">
       <header class="toolbar">
-        <span class="brand">Assembl<b>Easy</b> <small>8086</small></span>
         <select id="examples" title="Carica un esempio"></select>
         <button id="btn-open" title="Apri un file .asm">Apri</button>
         <button id="btn-save" title="Scarica il codice come .asm">Salva</button>
@@ -27,11 +35,7 @@
       <main class="layout">
         <section class="pane editor-pane">
           <div class="pane-title">Codice sorgente</div>
-          <div class="editor" id="editor">
-            <div class="gutter" id="gutter"></div>
-            <div class="backdrop" id="backdrop"></div>
-            <textarea id="code" spellcheck="false" wrap="off" autocomplete="off" autocapitalize="off"></textarea>
-          </div>
+          <div id="editor-host"></div>
           <div id="messages" class="messages"></div>
         </section>
         <aside class="side">
@@ -58,6 +62,8 @@
           </section>
         </aside>
       </main>
+      </div>
+      <div id="view-page" class="view page" hidden></div>
     </div>
     <input id="file-input" type="file" accept=".asm,.txt" hidden />
     <script type="module" src="/src/main.ts"></script>
