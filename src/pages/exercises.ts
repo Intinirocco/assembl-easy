@@ -4,6 +4,9 @@ import { openInEmulator } from '../bus';
 import { esc, inline, store } from '../ui/dom';
 import { CodeEditor } from '../ui/editor';
 import { renderReport } from '../ui/report';
+import { TEST_HELP, TestRows } from '../ui/testrows';
+import { allTests, autoTests } from '../content/autotests';
+import type { TestCase } from '../emu/grader';
 
 const done = store<string[]>('done', []);
 const LEVELS = ['', 'Facile', 'Medio', 'Difficile'];
@@ -95,7 +98,7 @@ export function renderExerciseList(root: HTMLElement) {
             <div class="xr-top"><span class="ex-cat">${esc(e.category)}</span>${levelDots(e.level)}</div>
             <h3>${esc(e.title)}</h3>
             <p class="xr-text">${esc(plain(e.text))}</p>
-            <div class="tags">${extra.map((t) => `<span class="tag">${esc(t)}</span>`).join('')}<span class="tag tests">${e.tests.length} casi di prova</span></div>
+            <div class="tags">${extra.map((t) => `<span class="tag">${esc(t)}</span>`).join('')}<span class="tag tests">${e.tests.length + autoTests(e).length} casi di prova</span></div>
           </div>
           <span class="xr-go">${isDone ? 'Rivedi' : 'Svolgi'} →</span>
         </a>`;
@@ -157,13 +160,16 @@ function renderDetail(root: HTMLElement, ex: Exercise) {
   const prev = EXERCISES[idx - 1];
   const isDone = done.get().includes(ex.id);
 
+  const sets = allTests(ex);
   const placeholder = () => `<div class="rep rep-idle">
-      <div class="rep-title">Casi di prova (${ex.tests.length + (ex.requires?.length ? 1 : 0)})</div>
+      <div class="rep-title">Cosa verrà verificato</div>
+      <p class="rep-sub">${sets.base.length + sets.auto.length} casi: ${sets.base.length} base + ${sets.auto.length} generati automaticamente</p>
+      ${ex.requires?.length ? `<p class="small">Il programma deve usare ${ex.requires.map((r) => `<code>${r.toUpperCase()}</code>`).join(', ')}.</p>` : ''}
       <ul class="rep-tests idle">
-        ${ex.requires?.length ? `<li><span class="mark">○</span> <b>Struttura del programma</b> <span class="muted small">usa ${ex.requires.map((r) => r.toUpperCase()).join(', ')}</span></li>` : ''}
-        ${ex.tests.map((t) => `<li><span class="mark">○</span> <b>${esc(t.name)}</b></li>`).join('')}
+        ${sets.base.map((t) => `<li><span class="mark">○</span> <b>${esc(t.name)}</b></li>`).join('')}
       </ul>
-      <p class="rep-hint">Premi <b>Verifica</b> per eseguire il programma su tutti i casi.</p>
+      <p class="rep-hint">${sets.auto.length ? `Più ${sets.auto.length} test automatici: valori limite (0, massimi, riporti, overflow…) e valori casuali sempre uguali.` : ''}
+      Premi <b>Verifica</b> per eseguirli tutti.</p>
     </div>`;
 
   root.innerHTML = `
@@ -179,6 +185,11 @@ function renderDetail(root: HTMLElement, ex: Exercise) {
         <div class="consegna">${inline(ex.text)}</div>
         <details class="hints"><summary>Suggerimenti <span class="muted">(${ex.hints.length})</span></summary>
           <ol>${ex.hints.map((h) => `<li>${inline(h)}</li>`).join('')}</ol>
+        </details>
+        <details class="hints"><summary>Aggiungi i tuoi casi di prova</summary>
+          <p class="warn">Facoltativo: vengono eseguiti insieme agli altri a ogni verifica.</p>
+          <div id="user-tests" class="user-tests"></div>
+          <details class="help small"><summary>Come compilare i campi</summary>${TEST_HELP}</details>
         </details>
         <details class="hints"><summary>Mostra la soluzione</summary>
           <p class="warn">Prova prima da solo: la soluzione è una delle tante possibili.</p>
@@ -225,8 +236,17 @@ function renderDetail(root: HTMLElement, ex: Exercise) {
     editor.selectLine(Number(a.dataset.goto));
   });
 
+  const userRows = new TestRows(root.querySelector('#user-tests') as HTMLElement, `ex:${ex.id}`);
+
   root.querySelector('#ex-check')!.addEventListener('click', () => {
-    const r = gradeProgram(editor.value, ex.tests, { requires: ex.requires });
+    let user: TestCase[];
+    try {
+      user = userRows.tests();
+    } catch (err) {
+      report.innerHTML = `<div class="rep rep-bad"><div class="rep-title">I tuoi casi di prova non sono validi</div><p>${esc((err as Error).message)}</p></div>`;
+      return;
+    }
+    const r = gradeProgram(editor.value, [...sets.base, ...sets.auto, ...user], { requires: ex.requires });
     editor.errors = r.errorLines;
     editor.render();
     report.innerHTML = renderReport(r);

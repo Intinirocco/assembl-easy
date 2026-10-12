@@ -106,11 +106,60 @@ Struttura:
 | `src/main.ts`, `src/style.css` | router e stile |
 | `tests/` | test (Vitest): programmi di lezione, esempi, esercizi con le loro soluzioni, wiki |
 
+## Come funziona la correzione automatica
+
+La correzione è **deterministica**: non usa intelligenza artificiale né servizi esterni, gira tutta nel browser e a
+parità di codice dà sempre lo stesso risultato.
+
+1. **Assemblaggio** (`src/emu/assembler.ts`). Il codice viene tradotto. Errori di sintassi, istruzioni sconosciute,
+   operandi di dimensione diversa, etichette o variabili non definite, virgole mancanti in `DB`… sono riportati con il
+   numero di riga e il testo si colora in rosso su quella riga. Se ci sono errori non si esegue nulla.
+2. **Esecuzione di ogni caso** (`src/emu/grader.ts`). Per ogni caso di prova viene creata una macchina nuova e si
+   imposta lo stato di partenza: valori iniziali delle variabili (`init`) e tasti da digitare (`input`). Si esegue fino a
+   `int 21h / 4Ch`. Per sicurezza un caso si ferma dopo 100.000 istruzioni (ciclo infinito) e, dopo 3 timeout, i casi
+   rimanenti non vengono nemmeno provati.
+3. **Confronto**. Alla fine si confrontano i risultati con quelli attesi (`expect`): valore delle **variabili**, dei
+   **registri**, testi presenti nel **terminale** (`output`, in ordine) o output **esatto** (`outputExact`). Un caso è
+   superato solo se tutti i controlli sono giusti. Un errore di esecuzione (divisione per zero, overflow di `div`, input
+   non previsto, ciclo infinito) fa fallire il caso e indica la riga.
+4. **Struttura** (`requires`). Alcuni esercizi pretendono l'uso di certe istruzioni (es. `CALL` e `RET` per le procedure).
+
+### I casi di prova di ogni esercizio
+
+Cliccando **Verifica** vengono eseguiti, in quest'ordine:
+
+| Gruppo | Origine | Scopo |
+| --- | --- | --- |
+| **Casi base** | scritti a mano in `src/content/exercises.ts` | i casi classici, facili da leggere |
+| **Test automatici** | generati da `src/content/autotests.ts` | valori limite e valori casuali |
+| **I tuoi test** | inseriti dall'utente nel riquadro "Aggiungi i tuoi casi di prova" | casi personali (facoltativi) |
+
+I **test automatici** per ogni esercizio comprendono:
+
+- **valori limite**: 0, 1, il massimo (255 o 65535), valori che causano riporto o overflow, numeri a cavallo del bit di
+  segno (127/128, 32767/32768), elementi uguali, il massimo in ogni posizione di un array…
+- **valori casuali** generati con un seme fisso derivato dall'identificativo dell'esercizio: sono diversi da un
+  esercizio all'altro ma **sempre gli stessi** per tutti e a ogni verifica, quindi i risultati sono riproducibili;
+- **risultato atteso calcolato con una formula indipendente** (nel codice del generatore, ad esempio
+  `Math.max(a, b)` o `(a + b) & 0xffff`), **non** dal programma di riferimento: così un eventuale errore
+  dell'emulatore non può "nascondersi" in un test.
+
+Il report raggruppa i casi, mostra per i primi falliti i **valori usati** (`n1 = 200, n2 = 3`) e cosa si
+aspettava (`massimo: atteso 200, ottenuto 3`), e riduce a una riga i casi superati.
+
+### Verifica dei test (`npm test`)
+
+- ogni esercizio: la soluzione di riferimento supera **tutti** i casi base e automatici;
+- una serie di **soluzioni sbagliate plausibili** ("mutanti": salto con segno invece che senza, somma a 8 bit, ultimo
+  elemento ignorato, 0! non gestito…) deve essere **scoperta** dai soli test automatici;
+- un ciclo infinito viene fermato e segnalato in pochi millisecondi.
+
 ### Aggiungere un esercizio
 
 In `src/content/exercises.ts` aggiungi un elemento a `EXERCISES`: `data` (dichiarazioni), `solutionBody`
 (soluzione di riferimento) e `tests` (valori iniziali `init`, `input`, e attese `vars`/`regs`/`output`).
-`npm test` verifica che la soluzione superi tutti i test e che il codice di partenza no.
+In `src/content/autotests.ts` aggiungi un generatore con lo stesso `id`: valori limite + casuali e formula del
+risultato atteso. `npm test` verifica che la soluzione superi tutti i test e che il codice di partenza no.
 
 ## Pubblicazione
 

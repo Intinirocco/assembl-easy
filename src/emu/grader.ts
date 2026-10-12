@@ -6,6 +6,8 @@ export type Scalar = number | number[] | string;
 
 export interface TestCase {
   name: string;
+  /** a quale gruppo appartiene nel report: 'base' (scritti a mano), 'auto' (generati), 'user' (aggiunti dall'utente) */
+  group?: string;
   /** valori iniziali delle variabili dati (prima dell'esecuzione) */
   init?: Record<string, Scalar>;
   /** testo digitato dall'utente; "\n" equivale a Invio */
@@ -17,11 +19,16 @@ export interface TestCase {
     regs?: Record<string, number>;
     /** sottostringhe che devono comparire nell'output, in questo ordine */
     output?: string[];
+    /** l'output completo del terminale deve essere esattamente questo (CRLF compresi) */
+    outputExact?: string;
   };
 }
 
 export interface TestResult {
   name: string;
+  group: string;
+  /** descrizione leggibile dei valori usati (iniziali e input) */
+  info: string;
   passed: boolean;
   details: string[]; // una riga per ogni verifica fallita
   output: string;
@@ -38,7 +45,9 @@ export interface GradeReport {
   errorLines: Map<number, string>;
 }
 
-const MAX_STEPS = 200_000;
+const MAX_STEPS = 100_000;
+/** dopo tanti test che non terminano si smette di provare: il programma ha quasi certamente un ciclo infinito */
+const MAX_TIMEOUTS = 3;
 
 const REG16 = ['ax', 'cx', 'dx', 'bx', 'sp', 'bp', 'si', 'di'];
 const REG8 = ['al', 'cl', 'dl', 'bl', 'ah', 'ch', 'dh', 'bh'];
@@ -84,6 +93,20 @@ export interface GradeOptions {
   requires?: string[];
 }
 
+function fmtScalar(v: Scalar): string {
+  if (typeof v === 'string') return JSON.stringify(v.replace(/\$$/, '$'));
+  if (Array.isArray(v)) return `[${v.join(', ')}]`;
+  return String(v);
+}
+
+/** "n1 = 200, n2 = 3 · input: 7⏎" */
+export function describeCase(init?: Record<string, Scalar>, input?: string): string {
+  const parts: string[] = [];
+  for (const [k, v] of Object.entries(init ?? {})) parts.push(`${k} = ${fmtScalar(v)}`);
+  if (input) parts.push(`input: ${input.replace(/\r?\n/g, '⏎')}`);
+  return parts.join(', ');
+}
+
 export function gradeProgram(source: string, tests: TestCase[], opts: GradeOptions = {}): GradeReport {
   const prog = assemble(source);
   const errorLines = new Map<number, string>();
@@ -98,14 +121,32 @@ export function gradeProgram(source: string, tests: TestCase[], opts: GradeOptio
     const missing = opts.requires.filter((r) => !used.has(r.toLowerCase()));
     results.push({
       name: 'Struttura del programma',
+      group: 'base',
+      info: '',
       passed: missing.length === 0,
       details: missing.map((r) => `Il programma deve usare l'istruzione ${r.toUpperCase()}`),
       output: '',
     });
   }
+  let timeouts = 0;
   for (const t of tests) {
     const details: string[] = [];
-    const m = new Machine(prog);
+    const group = t.group ?? 'base';
+    const info = describeCase(t.init, t.input);
+    // il programma non termina quasi mai per caso: inutile ripetere decine di volte lo stesso timeout
+    if (timeouts >= MAX_TIMEOUTS) {
+      results.push({
+        name: t.name,
+        group,
+        info,
+        passed: false,
+        details: ['Non eseguito: i test precedenti non terminano (probabile ciclo infinito).'],
+        output: '',
+        runtimeError: 'Non eseguito',
+      });
+      continue;
+    }
+    const m = new Machine(prog, { record: false });
     // valori iniziali
     for (const [name, val] of Object.entries(t.init ?? {})) {
       const loc = symbolAddr(prog, name);
@@ -129,6 +170,7 @@ export function gradeProgram(source: string, tests: TestCase[], opts: GradeOptio
     } else if (m.status !== 'halted') {
       runtimeError = `Il programma non termina entro ${MAX_STEPS.toLocaleString('it-IT')} istruzioni (ciclo infinito?).`;
       errorLine = m.currentLine;
+      timeouts++;
     }
     if (runtimeError) {
       details.push(runtimeError);
@@ -157,6 +199,10 @@ export function gradeProgram(source: string, tests: TestCase[], opts: GradeOptio
           if ((got & mask) !== (exp & mask)) details.push(`${name.toUpperCase()}: atteso ${exp & mask}, ottenuto ${got}`);
         }
       }
+      if (t.expect.outputExact !== undefined && m.out !== t.expect.outputExact) {
+        const show = (x: string) => JSON.stringify(x.replace(/\r\n/g, '⏎'));
+        details.push(`Output: atteso ${show(t.expect.outputExact)}, ottenuto ${show(m.out)}`);
+      }
       let pos = 0;
       for (const frag of t.expect.output ?? []) {
         const i = m.out.indexOf(frag, pos);
@@ -167,7 +213,7 @@ export function gradeProgram(source: string, tests: TestCase[], opts: GradeOptio
         pos = i + frag.length;
       }
     }
-    results.push({ name: t.name, passed: details.length === 0, details, output: m.out, runtimeError, errorLine });
+    results.push({ name: t.name, group, info, passed: details.length === 0, details, output: m.out, runtimeError, errorLine });
   }
   return {
     assemblyErrors: [],

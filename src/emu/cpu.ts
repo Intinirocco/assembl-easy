@@ -80,7 +80,11 @@ export class Machine {
   private snap: Snapshot | null = null;
   private haltedFlag = false;
 
-  constructor(public program: Program) {
+  /** record=false: niente annullamento né cronologia (usato dal correttore, molto più veloce) */
+  private record: boolean;
+
+  constructor(public program: Program, opts: { record?: boolean } = {}) {
+    this.record = opts.record ?? true;
     this.reset();
   }
 
@@ -421,7 +425,10 @@ export class Machine {
   /** Esegue una istruzione. Restituisce false se non è avanzato (fine, errore, attesa input). */
   step(): boolean {
     if (this.status === 'halted' || this.status === 'error') return false;
-    if (!this.snap) {
+    if (!this.record) {
+      this.writes.length = 0;
+      this.consumed.length = 0;
+    } else if (!this.snap) {
       this.snap = this.takeSnapshot();
       this.writes = [];
       this.consumed = [];
