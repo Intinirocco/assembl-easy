@@ -14,9 +14,9 @@ moderna, senza installare nulla e con una sintassi compatibile con quella di emu
   assemblato automaticamente mentre scrivi.
 - **Esecuzione**: Compila, Run, Single step, Step back (torna indietro di un'istruzione), Stop, Reset,
   velocità regolabile.
-- **Registri** a schede: AX/BX/CX/DX con parte alta e bassa, SI, DI, BP, SP, IP e segmenti; i valori modificati
-  si evidenziano in verde. **Clic su un registro** per il popup con esadecimale, decimale (con e senza segno),
-  binario bit per bit, ASCII e distinzione tra parte alta e bassa; da lì si può anche impostare un nuovo valore.
+- **Registri** in due tabelle: AX/BX/CX/DX con parte alta (H) e bassa (L), poi SI, DI, BP, SP, IP e segmenti; le
+  righe modificate si evidenziano in verde. **Clic su un registro** (o sulla sola parte H/L) per il popup con
+  esadecimale, decimale con e senza segno, binario, bit e ASCII; da lì si può anche impostare un nuovo valore.
 - **Flag** (CF, ZF, SF, OF, PF, AF, DF, IF, TF) con descrizione al passaggio del mouse.
 - **Cosa è successo**: per ogni istruzione eseguita, i registri, flag e celle di memoria modificati, il testo
   stampato e gli eventuali salti; cronologia delle ultime istruzioni cliccabile per tornare alla riga.

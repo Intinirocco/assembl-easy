@@ -147,30 +147,40 @@ function renderRegs() {
   const s = m ? m.segs : new Uint16Array(4);
   const ip = m ? m.ip : 0;
   const chg = (a: number, b: number) => (m && a !== b ? ' chg' : '');
-  const gen = (name: string) => {
-    const i = REG16_ORDER.indexOf(name);
-    const v = r[i];
-    const p = prevRegs[i];
-    return `<div class="rcard${chg(v, p)}" data-reg="${name}">
-      <div class="rc-head"><b>${name}</b><span>${REG_INFO[name]}</span></div>
-      <div class="rc-line"><div class="rc-val">${hex(v, 4)}<small>h</small></div><div class="rc-dec">${v}</div></div>
-      <div class="rc-bytes">
-        <div class="rb${chg(v >> 8, p >> 8)}" data-reg="${name[0]}H"><span>${name[0]}H</span><b>${hex(v >> 8, 2)}</b><em>${v >> 8}</em></div>
-        <div class="rb${chg(v & 0xff, p & 0xff)}" data-reg="${name[0]}L"><span>${name[0]}L</span><b>${hex(v & 0xff, 2)}</b><em>${v & 0xff}</em></div>
-      </div>
-    </div>`;
-  };
-  const small = (name: string, v: number, p: number) =>
-    `<div class="scard${chg(v, p)}" data-reg="${name}" title="${REG_INFO[name]}">
-      <b>${name}</b><span class="sv">${hex(v, 4)}</span><span class="sd">${v}</span></div>`;
   const idx = (n: string) => REG16_ORDER.indexOf(n);
+
+  // registri generali: valore a 16 bit + parte alta e bassa
+  const gen = (name: string) => {
+    const v = r[idx(name)];
+    const p = prevRegs[idx(name)];
+    const L = name[0];
+    return `<tr class="rr${chg(v, p)}" data-reg="${name}" title="${REG_INFO[name]}">
+      <th>${name}</th><td class="hx">${hex(v, 4)}</td>
+      <td class="by${chg(v >> 8, p >> 8)}" data-reg="${L}H" title="${L}H: parte alta">${hex(v >> 8, 2)}</td>
+      <td class="by${chg(v & 0xff, p & 0xff)}" data-reg="${L}L" title="${L}L: parte bassa">${hex(v & 0xff, 2)}</td>
+      <td class="dc">${v}</td></tr>`;
+  };
+  const one = (name: string, v: number, p: number) =>
+    `<tr class="rr${chg(v, p)}" data-reg="${name}" title="${REG_INFO[name]}">
+      <th>${name}</th><td class="hx">${hex(v, 4)}</td><td class="dc">${v}</td></tr>`;
+
   $('regs').innerHTML = `
-    <div class="reg-gen">${['AX', 'BX', 'CX', 'DX'].map(gen).join('')}</div>
-    <div class="reg-row-title">Indici, puntatori e segmenti</div>
-    <div class="reg-small">
-      ${['SI', 'DI', 'BP', 'SP'].map((n) => small(n, r[idx(n)], prevRegs[idx(n)])).join('')}
-      ${small('IP', ip, prevIp)}
-      ${small('CS', s[1], prevSegs[1])}${small('DS', s[3], prevSegs[3])}${small('SS', s[2], prevSegs[2])}${small('ES', s[0], prevSegs[0])}
+    <div class="reg-cols">
+      <div>
+        <table class="regtbl">
+          <thead><tr><th></th><th>Hex</th><th>H</th><th>L</th><th>Dec</th></tr></thead>
+          <tbody>${['AX', 'BX', 'CX', 'DX'].map(gen).join('')}</tbody>
+        </table>
+        <div id="flags" class="flags"></div>
+      </div>
+      <table class="regtbl">
+        <thead><tr><th></th><th>Hex</th><th>Dec</th></tr></thead>
+        <tbody>
+          ${['SI', 'DI', 'BP', 'SP'].map((n) => one(n, r[idx(n)], prevRegs[idx(n)])).join('')}
+          ${one('IP', ip, ip)}
+          ${one('CS', s[1], prevSegs[1])}${one('DS', s[3], prevSegs[3])}${one('SS', s[2], prevSegs[2])}${one('ES', s[0], prevSegs[0])}
+        </tbody>
+      </table>
     </div>`;
 
   const f = m ? m.flags : 2;
@@ -191,11 +201,8 @@ function openRegPopup(name: string) {
   if (!info) return;
   closeRegPopup();
   const { v, bits } = info;
-  const is16gp = bits === 16 && REG16_ORDER.indexOf(name) >= 0 && ['AX', 'BX', 'CX', 'DX'].includes(name);
-  const title =
-    bits === 8
-      ? `${name} — ${name[1] === 'H' ? 'parte alta' : 'parte bassa'} di ${name[0]}X`
-      : `${name} — ${REG_INFO[name]}`;
+  const isSplit = ['AX', 'BX', 'CX', 'DX'].includes(name);
+  const title = bits === 8 ? `${name} · parte ${name[1] === 'H' ? 'alta' : 'bassa'} di ${name[0]}X` : `${name} · ${REG_INFO[name]}`;
   const prevVal = (() => {
     const i = REG16_ORDER.indexOf(name);
     if (i >= 0) return prevRegs[i];
@@ -210,50 +217,41 @@ function openRegPopup(name: string) {
     return null;
   })();
 
-  const bitCells = (val: number, n: number, offset: number) => {
+  // riga di bit: indice sopra, valore sotto; spazio ogni 4 bit
+  const bitRow = () => {
     let h = '';
-    for (let b = n - 1; b >= 0; b--) {
-      const on = (val >> b) & 1;
-      h += `<div class="bit${on ? ' on' : ''}"><i>${b + offset}</i><b>${on}</b></div>`;
+    for (let b = bits - 1; b >= 0; b--) {
+      const on = (v >> b) & 1;
+      h += `<div class="bit${on ? ' on' : ''}${b % 4 === 0 && b !== 0 ? ' nib' : ''}"><i>${b}</i><b>${on}</b></div>`;
     }
     return h;
   };
-  const byteBlock = (label: string, val: number, bitOffset: number) => `
-    <div class="byte-block">
-      <div class="bb-title">${label}</div>
-      <div class="bits">${bitCells(val, 8, bitOffset)}</div>
-      <table class="kv">
-        <tr><td>Hex</td><td>${hex(val, 2)}h</td></tr>
-        <tr><td>Decimale</td><td>${val}</td></tr>
-        <tr><td>Con segno</td><td>${signed(val, 8)}</td></tr>
-        <tr><td>Binario</td><td>${bin(val, 8)}</td></tr>
-        <tr><td>ASCII</td><td>${val >= 32 && val < 127 ? esc(String.fromCharCode(val)) : '<span class="muted">non stampabile</span>'}</td></tr>
-      </table>
-    </div>`;
+  const ascii = (n: number) => (n >= 32 && n < 127 ? `'${esc(String.fromCharCode(n))}'` : '—');
+  const part = (label: string, n: number) =>
+    `<tr><th>${label}</th><td>${hex(n, 2)}h</td><td>${n}</td><td>${signed(n, 8)}</td><td>${bin(n, 8)}</td><td>${ascii(n)}</td></tr>`;
 
   let body = `
-    <table class="kv big">
-      <tr><td>Esadecimale</td><td><b>${hex(v, bits / 4)}h</b></td></tr>
-      <tr><td>Decimale (senza segno)</td><td><b>${v}</b></td></tr>
-      <tr><td>Decimale (con segno)</td><td><b>${signed(v, bits)}</b></td></tr>
-      <tr><td>Binario</td><td><b>${bin(v, bits)}</b></td></tr>
-      ${prevVal !== null && prevVal !== v ? `<tr><td>Valore precedente</td><td>${hex(prevVal, bits / 4)}h (${prevVal})</td></tr>` : ''}
-    </table>`;
-  if (bits === 16) {
-    body += `<div class="bits-wrap">
-        <div class="bits-label">Bit del registro</div>
-        <div class="bits bits16">${bitCells(v >> 8, 8, 8)}<span class="bits-gap"></span>${bitCells(v & 0xff, 8, 0)}</div>
-      </div>`;
-  } else body += `<div class="bits-wrap"><div class="bits">${bitCells(v, 8, 0)}</div></div>`;
-  if (is16gp) {
-    body += `<div class="byte-blocks">${byteBlock(`${name[0]}H — parte alta (bit 15–8)`, v >> 8, 8)}${byteBlock(`${name[0]}L — parte bassa (bit 7–0)`, v & 0xff, 0)}</div>`;
-  } else if (bits === 8) {
-    body += `<table class="kv"><tr><td>ASCII</td><td>${v >= 32 && v < 127 ? esc(String.fromCharCode(v)) : '<span class="muted">non stampabile</span>'}</td></tr></table>`;
+    <div class="rp-main">
+      <div class="rp-hex">${hex(v, bits / 4)}<small>h</small></div>
+      <div class="rp-vals">
+        <div><span>${v}</span> senza segno</div>
+        <div><span>${signed(v, bits)}</span> con segno</div>
+        ${bits === 8 ? `<div><span>${ascii(v)}</span> ASCII</div>` : ''}
+      </div>
+    </div>
+    <div class="rp-bin">${bin(v, bits)}</div>
+    <div class="bits${bits === 16 ? ' b16' : ''}">${bitRow()}</div>`;
+  if (isSplit) {
+    body += `<table class="rp-parts">
+      <thead><tr><th></th><th>Hex</th><th>Dec</th><th>Con segno</th><th>Binario</th><th>ASCII</th></tr></thead>
+      <tbody>${part(`${name[0]}H alta`, v >> 8)}${part(`${name[0]}L bassa`, v & 0xff)}</tbody></table>`;
   }
-  const editable = !!machine && name !== 'CS' && name !== 'IP';
-  if (editable) {
+  if (prevVal !== null && prevVal !== v) {
+    body += `<p class="rp-prev">Valore precedente: <b>${hex(prevVal, bits / 4)}h</b> (${prevVal})</p>`;
+  }
+  if (machine && name !== 'CS' && name !== 'IP') {
     body += `<form class="reg-edit" id="reg-edit">
-        <label>Nuovo valore <input id="reg-new" placeholder="es. 25, 0Ah, 1010b" autocomplete="off" spellcheck="false" /></label>
+        <input id="reg-new" placeholder="Nuovo valore: 25, 0Ah, 1010b" autocomplete="off" spellcheck="false" />
         <button type="submit" class="primary">Imposta</button>
         <span id="reg-err" class="reg-err"></span>
       </form>`;
@@ -282,12 +280,12 @@ function openRegPopup(name: string) {
     else if (/^0x[0-9a-f]+$/i.test(txt)) n = parseInt(txt, 16);
     else if (/^[01]+b$/i.test(txt)) n = parseInt(txt.slice(0, -1), 2);
     else {
-      err.textContent = 'Valore non valido (usa decimale, 0Ah o 1010b)';
+      err.textContent = 'Valore non valido';
       return;
     }
     const max = bits === 8 ? 0xff : 0xffff;
     if (n < -(max + 1) / 2 || n > max) {
-      err.textContent = `Il valore non entra in ${bits} bit`;
+      err.textContent = `Non entra in ${bits} bit`;
       return;
     }
     n &= max;
