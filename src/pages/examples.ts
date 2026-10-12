@@ -3,21 +3,53 @@ import { openInEmulator } from '../bus';
 import { esc, inline } from '../ui/dom';
 import { highlightLine } from '../ui/highlight';
 
-// I filtri attivi sopravvivono ai cambi di route (aprire/chiudere un esempio).
+// I filtri attivi sopravvivono ai cambi di pagina (aprire un esempio e tornare indietro).
 const selected = new Set<string>();
+let query = '';
+
+const CATEGORY_INFO: Record<string, string> = {
+  'Operazioni base': 'MOV, somma, sottrazione, prodotto e divisione: i mattoni di ogni programma.',
+  Variabili: 'Dichiarare dati in memoria, leggerli e scriverli, usare indirizzi e array.',
+  'Salti condizionati': 'Confrontare valori e scegliere cosa eseguire: l\'if/else dell\'assembly.',
+  Cicli: 'Ripetere istruzioni con LOOP o con un salto all\'indietro.',
+  'Stack e procedure': 'PUSH, POP, CALL e RET per salvare valori e riutilizzare codice.',
+  'Input/Output': 'Leggere dalla tastiera e stampare nel terminale con le interruzioni del DOS.',
+};
 
 function matches(e: Example): boolean {
-  if (selected.size === 0) return true;
   const tags = exampleTags(e);
-  return [...selected].every((t) => tags.includes(t)); // intersezione
+  if (![...selected].every((t) => tags.includes(t))) return false; // intersezione degli argomenti
+  const q = query.trim().toLowerCase();
+  return !q || (e.title + ' ' + e.summary + ' ' + e.category).toLowerCase().includes(q);
+}
+
+/** Poche righe significative del programma (dopo la preparazione dei segmenti). */
+function preview(code: string): string {
+  const lines = code.split('\n');
+  let i = lines.findIndex((l) => /^\s*mov\s+es\s*,\s*ax/i.test(l));
+  i = i >= 0 ? i + 1 : 0;
+  const out: string[] = [];
+  for (; i < lines.length && out.length < 5; i++) {
+    const l = lines[i];
+    if (/4c00h/i.test(l)) break;
+    if (l.trim() && !/^\s*;/.test(l)) out.push(l.replace(/\s{2,};.*$/, '').replace(/\t/g, '    '));
+  }
+  const min = Math.min(...out.map((l) => l.match(/^\s*/)![0].length), 99);
+  return out.map((l) => highlightLine(l.slice(min === 99 ? 0 : min))).join('\n');
 }
 
 function cardHtml(e: Example): string {
   const extra = exampleTags(e).filter((t) => t !== e.category);
-  return `<a class="ex-card" href="#/esempi/${e.id}" data-id="${e.id}">
-    <span class="ex-cat">${esc(e.category)}</span>
-    <strong>${esc(e.title)}</strong>
-    ${extra.length ? `<span class="tags">${extra.map((t) => `<span class="tag">${esc(t)}</span>`).join('')}</span>` : ''}
+  const lines = e.code.replace(/\n$/, '').split('\n').length;
+  return `<a class="xcard" href="#/esempi/${e.id}">
+    <div class="xc-top"><span class="ex-cat">${esc(e.category)}</span><span class="xc-lines">${lines} righe</span></div>
+    <h3>${esc(e.title)}</h3>
+    <p class="xc-sum">${inline(e.summary)}</p>
+    <pre class="xc-code">${preview(e.code)}</pre>
+    <div class="xc-foot">
+      <span class="tags">${extra.map((t) => `<span class="tag">${esc(t)}</span>`).join('')}</span>
+      <span class="xc-go">Apri →</span>
+    </div>
   </a>`;
 }
 
@@ -28,54 +60,72 @@ function drawGrid(root: HTMLElement) {
   for (const c of EXAMPLE_CATEGORIES) {
     const items = list.filter((e) => e.category === c);
     if (!items.length) continue;
-    parts.push(`<h2 class="cat">${esc(c)}</h2><div class="ex-grid">${items.map(cardHtml).join('')}</div>`);
+    parts.push(`<section class="xgroup">
+      <div class="xg-head"><h2>${esc(c)}</h2><span class="xg-count">${items.length}</span></div>
+      <p class="xg-desc">${esc(CATEGORY_INFO[c] ?? '')}</p>
+      <div class="xgrid">${items.map(cardHtml).join('')}</div>
+    </section>`);
   }
   grid.innerHTML = parts.join('');
   (root.querySelector('#exs-empty') as HTMLElement).hidden = list.length > 0;
-  const n = root.querySelector('#exs-count');
-  if (n) n.textContent = `${list.length} di ${EXAMPLES.length} esempi`;
+  (root.querySelector('#exs-count') as HTMLElement).textContent = `${list.length} di ${EXAMPLES.length} esempi`;
 }
 
-function drawChips(root: HTMLElement) {
-  root.querySelectorAll<HTMLButtonElement>('#exs-tags .chip').forEach((c) => {
-    const t = c.dataset.tag ?? '';
-    c.classList.toggle('on', t === '' ? selected.size === 0 : selected.has(t));
+function drawTopics(root: HTMLElement) {
+  root.querySelectorAll<HTMLButtonElement>('#exs-tags .topic').forEach((b) => {
+    const t = b.dataset.tag ?? '';
+    b.classList.toggle('on', t === '' ? selected.size === 0 : selected.has(t));
   });
 }
 
 function renderList(root: HTMLElement) {
+  const count = (t: string) => EXAMPLES.filter((e) => exampleTags(e).includes(t)).length;
   root.innerHTML = `
-    <div class="page-head">
-      <h1>Esempi spiegati</h1>
-      <p>Programmi completi, già commentati. Scegli un argomento (puoi selezionarne più di uno: vedrai solo gli esempi
-      che li riguardano tutti), apri un esempio e poi portalo nell'emulatore per eseguirlo passo per passo.</p>
-    </div>
-    <div class="filters">
-      <div class="chips" id="exs-tags">
-        <button class="chip" data-tag="">Tutti</button>
-        ${EXAMPLE_TAGS.map((t) => `<button class="chip" data-tag="${esc(t)}">${esc(t)}</button>`).join('')}
+    <div class="browse-head">
+      <div>
+        <h1>Esempi spiegati</h1>
+        <p>Programmi completi e commentati, da leggere, eseguire passo per passo e modificare.
+        Seleziona uno o più argomenti: vedrai solo gli esempi che li riguardano <b>tutti</b>.</p>
       </div>
-      <div class="muted small" id="exs-count"></div>
     </div>
-    <div id="exs-grid"></div>
-    <p id="exs-empty" class="empty" hidden>Nessun esempio ha tutti gli argomenti selezionati. Togli un filtro.</p>`;
+    <div class="browse">
+      <aside class="browse-side">
+        <input id="exs-q" type="search" placeholder="Cerca un esempio…" value="${esc(query)}" />
+        <div class="bs-title">Argomenti</div>
+        <div id="exs-tags" class="topics">
+          <button class="topic" data-tag="">Tutti <span class="count">${EXAMPLES.length}</span></button>
+          ${EXAMPLE_TAGS.map((t) => `<button class="topic" data-tag="${esc(t)}">${esc(t)} <span class="count">${count(t)}</span></button>`).join('')}
+        </div>
+        <div class="bs-note">
+          <b>Come studiare un esempio</b>
+          <ol><li>Leggi il codice e la spiegazione.</li><li>Aprilo nell'emulatore.</li><li>Esegui con <i>Single step</i> e osserva registri e variabili.</li><li>Cambia un valore e prevedi il risultato.</li></ol>
+        </div>
+      </aside>
+      <div class="browse-main">
+        <div class="muted small" id="exs-count"></div>
+        <div id="exs-grid"></div>
+        <p id="exs-empty" class="empty" hidden>Nessun esempio ha tutti gli argomenti selezionati. Togli un filtro.</p>
+      </div>
+    </div>`;
 
   root.querySelector('#exs-tags')!.addEventListener('click', (e) => {
-    const b = (e.target as HTMLElement).closest('.chip') as HTMLButtonElement | null;
+    const b = (e.target as HTMLElement).closest('.topic') as HTMLButtonElement | null;
     if (!b) return;
     const t = b.dataset.tag ?? '';
     if (t === '') selected.clear();
     else if (selected.has(t)) selected.delete(t);
     else selected.add(t);
-    drawChips(root);
+    drawTopics(root);
     drawGrid(root);
   });
-
-  drawChips(root);
+  root.querySelector<HTMLInputElement>('#exs-q')!.addEventListener('input', (e) => {
+    query = (e.target as HTMLInputElement).value;
+    drawGrid(root);
+  });
+  drawTopics(root);
   drawGrid(root);
 }
 
-// normalizza una riga: via commenti, via il contenuto delle stringhe, spazi singoli, minuscolo
 const norm = (t: string) =>
   t
     .replace(/"[^"]*"|'[^']*'/g, '""')
@@ -185,16 +235,8 @@ function renderDetail(root: HTMLElement, ex: Example) {
     </div>
 
     <nav class="pager-cards">
-      ${
-        prev
-          ? `<a href="#/esempi/${prev.id}"><span>← Precedente</span><strong>${esc(prev.title)}</strong></a>`
-          : '<span></span>'
-      }
-      ${
-        next
-          ? `<a class="next" href="#/esempi/${next.id}"><span>Successivo →</span><strong>${esc(next.title)}</strong></a>`
-          : '<span></span>'
-      }
+      ${prev ? `<a href="#/esempi/${prev.id}"><span>← Precedente</span><strong>${esc(prev.title)}</strong></a>` : '<span></span>'}
+      ${next ? `<a class="next" href="#/esempi/${next.id}"><span>Successivo →</span><strong>${esc(next.title)}</strong></a>` : '<span></span>'}
     </nav>`;
 
   // spiegazione ↔ righe di codice

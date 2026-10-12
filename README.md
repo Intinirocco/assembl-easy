@@ -37,13 +37,14 @@ moderna, senza installare nulla e con una sintassi compatibile con quella di emu
 
 ### Sezioni didattiche
 
-- **Esempi spiegati** (`#/esempi`): 17 programmi completi, raggruppati per argomento, con filtri a selezione
-  multipla (si vedono solo gli esempi che hanno *tutti* gli argomenti scelti). Un clic su un box apre la pagina dell'esempio:
+- **Esempi spiegati** (`#/esempi`): 17 programmi completi, raggruppati per argomento, con barra laterale di filtri
+  a selezione multipla (si vedono solo gli esempi che hanno *tutti* gli argomenti scelti), ricerca e anteprima del codice. Un clic su un box apre la pagina dell'esempio:
   codice con righe numerate, spiegazioni numerate agganciate alle righe di codice (al passaggio del mouse la riga si
   illumina), risultato, guida "Provalo tu", pulsante "Apri nell'emulatore" e navigazione precedente/successivo. Ogni esempio è verificato da un test automatico.
-- **Wiki delle istruzioni** (`#/wiki`): per ogni istruzione e direttiva sintassi, operandi ammessi, flag modificati,
-  esempio e note; con ricerca e filtro per categoria. Link diretti del tipo `#/wiki/mov`.
-- **Esercizi** (`#/esercizi`): 19 esercizi, filtrabili per argomenti (selezione multipla, intersezione) e difficoltà, con consegna, suggerimenti, soluzione nascosta e
+- **Wiki delle istruzioni** (`#/wiki`): a due colonne, con l'elenco per categoria (ricercabile) a sinistra e la scheda
+  dell'istruzione a destra: sintassi, flag modificati, operandi ammessi, esempio e note. Link diretti `#/wiki/mov`.
+- **Esercizi** (`#/esercizi`): 19 esercizi con barra di avanzamento, filtri per argomenti (selezione multipla,
+  intersezione), difficoltà e stato, con consegna, suggerimenti, soluzione nascosta e
   **correzione automatica**: il programma viene eseguito su più casi di prova (valori iniziali, input da tastiera,
   variabili/registri/output attesi) e il sito mostra quali falliscono. I progressi sono salvati nel browser.
 - **Correzione** (`#/correzione`): si incolla il codice e si sceglie un esercizio del catalogo oppure si
