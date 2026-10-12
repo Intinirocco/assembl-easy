@@ -13,7 +13,7 @@ export const PANELS = [
   { id: 'stack', title: 'Stack' },
 ] as const;
 
-const KEY = 'assembl-easy:layout-v3';
+const KEY = 'assembl-easy:layout-v4';
 
 /** Su schermi stretti (telefono) niente finestre trascinabili: una vista alla volta con schede in basso. */
 const mq = window.matchMedia('(max-width: 760px)');
@@ -47,8 +47,8 @@ function addPanel(id: string, position?: Parameters<DockviewApi['addPanel']>[0][
 /**
  * Disposizione di partenza (calcolata sulle dimensioni correnti dell'area):
  *   codice      | terminale
- *   registri    | variabili   (con "Cosa è successo" in scheda dietro i registri,
- *                              Memoria e Stack in scheda dietro le variabili)
+ *   registri    | variabili
+ * "Cosa è successo", Memoria e Stack non sono presenti: si aprono dal menu Pannelli.
  */
 function defaultLayout() {
   const W = host!.clientWidth;
@@ -60,11 +60,6 @@ function defaultLayout() {
   const regsH = Math.min(Math.max(H * 0.48, 410), Math.max(H - 240, 200));
   addPanel('regs', { referencePanel: 'editor', direction: 'below' }, { h: regsH });
   addPanel('vars', { referencePanel: 'screen', direction: 'below' }, { h: H * 0.38 });
-  addPanel('log', { referencePanel: 'regs', direction: 'within' });
-  addPanel('mem', { referencePanel: 'vars', direction: 'within' });
-  addPanel('stack', { referencePanel: 'vars', direction: 'within' });
-  api!.getPanel('regs')?.api.setActive();
-  api!.getPanel('vars')?.api.setActive();
 }
 
 function buildLayout() {
@@ -162,6 +157,15 @@ export function isOpen(id: string): boolean {
   return !!api?.getPanel(id);
 }
 
+/** Dove aprire un pannello chiuso: in scheda accanto a un pannello affine, se presente. */
+const OPEN_WITH: Record<string, string> = { log: 'regs', mem: 'vars', stack: 'vars', vars: 'regs' };
+
+function openPanel(id: string) {
+  const ref = OPEN_WITH[id];
+  if (ref && api!.getPanel(ref)) addPanel(id, { referencePanel: ref, direction: 'within' });
+  else addPanel(id, { direction: 'right' });
+}
+
 /** Mostra un pannello chiuso oppure lo chiude. */
 export function togglePanel(id: string) {
   if (isMobile) {
@@ -171,7 +175,7 @@ export function togglePanel(id: string) {
   if (!api) return;
   const p = api.getPanel(id);
   if (p) p.api.close();
-  else addPanel(id, { direction: 'right' });
+  else openPanel(id);
   listeners.forEach((f) => f());
 }
 
@@ -185,7 +189,7 @@ export function focusPanel(id: string) {
   const p = api.getPanel(id);
   if (p) p.api.setActive();
   else {
-    addPanel(id, { direction: 'right' });
+    openPanel(id);
     api.getPanel(id)?.api.setActive();
   }
 }

@@ -588,6 +588,24 @@ for (const id of ['last-step', 'log']) {
 }
 
 // ---------- terminale e stato ----------
+/** Porta il cursore nel terminale (con qualche tentativo: il pannello può comparire un istante dopo). */
+function focusTerminal() {
+  if (isMobile) {
+    termInput.focus();
+    return;
+  }
+  let tries = 0;
+  const attempt = () => {
+    const a = document.activeElement as HTMLElement | null;
+    if (a === consoleEl) return;
+    // se nel frattempo si sta scrivendo in un campo di testo, non lo si disturba
+    if (a && a !== document.body && a.closest('input, textarea, select') && tries > 0) return;
+    consoleEl.focus({ preventScroll: true });
+    if (document.activeElement !== consoleEl && tries++ < 50) window.setTimeout(attempt, 40);
+  };
+  attempt(); // subito (rAF non parte se la scheda non è visibile); poi a ripetizione finché il pannello è pronto
+}
+
 let wasWaiting = false;
 function renderConsole() {
   consoleEl.textContent = machine ? machine.out : '';
@@ -596,7 +614,10 @@ function renderConsole() {
   hint.textContent = waiting ? 'In attesa di input: scrivi qui' : '';
   consoleEl.classList.toggle('waiting', waiting);
   // si porta in primo piano solo quando l'attesa inizia, per non togliere la scheda all'utente
-  if (waiting && !wasWaiting) focusPanel('screen');
+  if (waiting && !wasWaiting) {
+    focusPanel('screen');
+    focusTerminal();
+  }
   wasWaiting = waiting;
 }
 
@@ -686,7 +707,6 @@ function runLoop() {
     timer = window.setTimeout(runLoop, DELAYS[lvl]);
   } else {
     timer = null;
-    if (machine.status === 'waiting') (isMobile ? termInput : consoleEl).focus();
   }
 }
 
@@ -709,7 +729,6 @@ $('btn-step').addEventListener('click', () => {
   if (machine.status === 'halted' || machine.status === 'error') return;
   machine.step();
   renderState();
-  if (machine.status === 'waiting') (isMobile ? termInput : consoleEl).focus();
 });
 $('btn-back').addEventListener('click', () => {
   if (!machine) return;
@@ -779,6 +798,23 @@ termInput.addEventListener('keydown', (e) => {
 $('term-enter').addEventListener('click', () => {
   sendToProgram('\r');
   termInput.focus();
+});
+
+// rete di sicurezza: se il programma attende un input e il focus non è su un campo di testo,
+// i tasti premuti vanno comunque al programma (basta scrivere, senza cliccare sul terminale)
+window.addEventListener('keydown', (e) => {
+  if (e.defaultPrevented || !machine || machine.status !== 'waiting') return;
+  if ($('view-emu').hidden || e.ctrlKey || e.metaKey || e.altKey) return;
+  const t = e.target as HTMLElement | null;
+  if (t && (t.closest('input, textarea, select') || t.isContentEditable)) return;
+  let k: string | null = null;
+  if (e.key === 'Enter') k = '\r';
+  else if (e.key === 'Backspace') k = '\b';
+  else if (e.key.length === 1) k = e.key;
+  if (k === null) return;
+  e.preventDefault();
+  sendToProgram(k);
+  focusTerminal();
 });
 
 // scorciatoie
