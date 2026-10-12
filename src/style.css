@@ -56,7 +56,7 @@ a { color: var(--accent); }
 #view-emu { display: flex; flex-direction: column; overflow: auto; }
 
 /* ---------- pulsanti ---------- */
-button { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 9px 16px; cursor: pointer; font-size: 15px; font-weight: 500; line-height: 1.2; }
+button { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 9px 14px; cursor: pointer; font-size: 15px; font-weight: 500; line-height: 1.2; }
 button:hover { border-color: var(--accent); color: var(--accent-strong); }
 button:active { transform: translateY(1px); }
 button.primary { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
@@ -67,33 +67,88 @@ select, input[type=search], .page input, .page select, .page textarea:not(.cm), 
 .mini { padding: 3px 10px; font-size: 13px; border-radius: 6px; }
 .mini.danger { color: var(--err-line); margin-left: 8px; }
 
-.toolbar { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; padding: 12px 20px; background: var(--panel); border-bottom: 1px solid var(--border); flex: none; }
+.toolbar { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; padding: 10px 20px; background: var(--panel); border-bottom: 1px solid var(--border); flex: none; }
 .tb-group { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-.tb-group + .tb-group { padding-left: 18px; border-left: 1px solid var(--border); }
+.tb-group + .tb-group { padding-left: 14px; border-left: 1px solid var(--border); }
 .tb-speed { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 14px; }
-.status { margin-left: auto; padding: 7px 14px; border-radius: 999px; background: var(--panel-2); border: 1px solid var(--border); color: var(--muted); font-size: 14px; max-width: 40%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.status.ok { color: var(--ok); }
-.status.run, .status.wait { color: var(--accent-strong); border-color: var(--accent); }
-.status.err { color: var(--err-line); border-color: var(--err-line); }
+/* stato dell'emulatore: nella barra di navigazione, solo nella pagina Emulatore */
+.status { display: none; margin-left: auto; align-self: center; padding: 6px 14px; border-radius: 999px; background: rgba(255, 255, 255, .08); color: var(--nav-text); font-size: 14px; max-width: 45%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+body.is-emu .status { display: block; }
+.status.ok { color: #86efac; }
+.status.run, .status.wait { color: #c7d2fe; background: rgba(129, 140, 248, .25); }
+.status.err { color: #fecaca; background: rgba(220, 38, 38, .3); }
 
-/* ---------- disposizione dell'emulatore ---------- */
-.emu { flex: 1; min-height: 640px; display: grid; gap: 14px; padding: 14px 20px 20px; grid-template-columns: minmax(0, 1.2fr) minmax(380px, 1fr); grid-template-rows: minmax(0, 1.25fr) minmax(0, 1fr); }
-.p-editor { grid-column: 1; grid-row: 1; }
-.p-regs { grid-column: 2; grid-row: 1; }
-.bottom { grid-column: 1; grid-row: 2; display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr); gap: 14px; min-height: 0; }
-.p-data { grid-column: 2; grid-row: 2; }
-
-.pane { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
-.pane-title { padding: 10px 14px; font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--border); background: var(--panel-2); display: flex; align-items: center; gap: 10px; flex: none; }
-.pane-title .hint { margin-left: auto; text-transform: none; letter-spacing: 0; font-weight: 500; color: var(--muted); font-size: 13px; }
-.pane-title .legend { margin-left: auto; text-transform: none; letter-spacing: 0; font-weight: 500; font-size: 12.5px; display: flex; gap: 6px; align-items: center; }
-.lg { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-left: 8px; }
+/* ---------- disposizione dell'emulatore (pannelli trascinabili) ---------- */
+#dock { flex: 1; min-height: 560px; padding: 0; }
+.dock-pane { height: 100%; width: 100%; display: flex; flex-direction: column; min-height: 0; background: var(--panel); }
+.dock-pane.scroll, .dock-pane > .scroll { overflow: auto; }
+.dock-pane > .scroll { flex: 1; min-height: 0; }
+.pane-bar { display: flex; align-items: center; gap: 8px; padding: 6px 12px; border-bottom: 1px solid var(--border); background: var(--panel-2); font-size: 13px; color: var(--muted); flex: none; }
+.pane-bar.legend { gap: 6px; }
+.pane-bar .hint { color: var(--accent-strong); font-weight: 600; }
+.pane-bar .spacer { flex: 1; }
+.lg { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-left: 10px; }
+.lg:first-child { margin-left: 0; }
 .lg-cur { background: var(--cur-bg); box-shadow: inset 3px 0 0 var(--cur-bar); }
 .lg-last { background: var(--last-bg); box-shadow: inset 3px 0 0 var(--last-bar); }
 .lg-bp { background: var(--err-line); border-radius: 50%; }
 
+/* tema dei pannelli (dockview) allineato alla palette del sito */
+.dockview-theme-assembl {
+  color-scheme: light dark;
+  --dv-group-view-background-color: var(--panel);
+  --dv-tabs-and-actions-container-background-color: var(--panel-2);
+  --dv-activegroup-visiblepanel-tab-background-color: var(--panel);
+  --dv-activegroup-hiddenpanel-tab-background-color: var(--panel-2);
+  --dv-inactivegroup-visiblepanel-tab-background-color: var(--panel);
+  --dv-inactivegroup-hiddenpanel-tab-background-color: var(--panel-2);
+  --dv-tab-divider-color: var(--border);
+  --dv-activegroup-visiblepanel-tab-color: var(--accent-strong);
+  --dv-activegroup-hiddenpanel-tab-color: var(--muted);
+  --dv-inactivegroup-visiblepanel-tab-color: var(--text);
+  --dv-inactivegroup-hiddenpanel-tab-color: var(--muted);
+  --dv-separator-border: var(--border);
+  --dv-paneview-header-border-color: var(--border);
+  --dv-icon-hover-background-color: var(--accent-soft);
+  --dv-drag-over-background-color: rgba(79, 70, 229, .16);
+  --dv-drag-over-border-color: var(--accent);
+  --dv-edge-dock-indicator-color: var(--accent);
+  --dv-sash-color: transparent;
+  --dv-active-sash-color: var(--accent);
+  --dv-tabs-and-actions-container-height: 42px;
+  --dv-tabs-and-actions-container-font-size: 13px;
+  --dv-tab-font-size: 13px;
+  --dv-spacing-padding: 12px 20px 20px;
+  --dv-border-radius: 12px;
+  --dv-floating-box-shadow: 0 12px 40px rgba(0, 0, 0, .28);
+  --dv-floating-border: 1px solid var(--border);
+  box-sizing: border-box;
+  padding: var(--dv-spacing-padding);
+  background: var(--bg);
+}
+.dockview-theme-assembl .dv-dockview { padding: 0; }
+.dockview-theme-assembl .dv-resize-container:has(> .dv-groupview),
+.dockview-theme-assembl .dv-groupview {
+  border-radius: 12px;
+}
+.dockview-theme-assembl .dv-groupview { border: 1px solid var(--border); overflow: hidden; }
+.dockview-theme-assembl .dv-tab { font-weight: 700; letter-spacing: .03em; text-transform: uppercase; font-size: 12.5px; }
+.dockview-theme-assembl .dv-sash { border-radius: 4px; }
+
+/* menu pannelli */
+.layout-menu { position: relative; }
+.layout-pop { position: absolute; right: 0; top: calc(100% + 6px); z-index: 60; width: 270px; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; box-shadow: 0 12px 40px rgba(0, 0, 0, .25); }
+.lp-title { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+.lp-row { display: flex; align-items: center; gap: 8px; padding: 4px 0; font-size: 14.5px; cursor: pointer; }
+.layout-pop hr { border: 0; border-top: 1px solid var(--border); margin: 8px 0; }
+.layout-pop p { margin: 8px 0 0; }
+
+/* riquadro con titolo (pagine esercizi e correzione) */
+.pane { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+.pane-title { padding: 10px 14px; font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--border); background: var(--panel-2); display: flex; align-items: center; gap: 10px; flex: none; }
+
 /* ---------- editor ---------- */
-#editor-host { flex: 1; min-height: 0; }
+#editor-host { flex: 1; min-height: 0; display: flex; }
 .editor { position: relative; flex: 1; min-height: 0; display: flex; font: 14.5px/var(--lh) var(--mono); background: var(--panel); }
 .editor.tall { height: 440px; flex: none; }
 .gutter { width: 54px; overflow: hidden; padding: 8px 0; background: var(--panel-2); border-right: 1px solid var(--border); text-align: right; user-select: none; flex: none; }
@@ -205,7 +260,7 @@ select, input[type=search], .page input, .page select, .page textarea:not(.cm), 
 .log-row .fxs { grid-column: 3; }
 
 /* ---------- schermo ---------- */
-.console { flex: 1; margin: 0; padding: 12px 14px; overflow: auto; background: var(--console-bg); color: #d3f5dc; font: 14px/1.4 var(--mono); outline: 0; white-space: pre-wrap; word-break: break-all; }
+.console { flex: 1; min-height: 0; margin: 0; padding: 12px 14px; overflow: auto; background: var(--console-bg); color: #d3f5dc; font: 14px/1.4 var(--mono); outline: 0; white-space: pre-wrap; word-break: break-all; }
 .console:focus, .console.waiting { box-shadow: inset 0 0 0 2px var(--accent); }
 
 /* ---------- variabili, memoria, stack ---------- */
@@ -400,16 +455,8 @@ button.big { padding: 11px 20px; font-size: 16px; border-radius: 10px; }
 
 /* ---------- adattamento a schermi stretti ---------- */
 @media (max-width: 1100px) {
-  #view-emu { overflow: auto; }
-  .emu { display: flex; flex-direction: column; min-height: 0; }
-  .p-editor { height: 460px; flex: none; }
-  .p-regs, .p-data { flex: none; }
-  .p-data { height: 360px; }
-  .bottom { grid-template-columns: 1fr; }
-  .p-log { height: 340px; }
-  .console-pane { height: 240px; }
+  #dock { min-height: 900px; }
   .tb-group + .tb-group { padding-left: 0; border-left: 0; }
-  .status { margin-left: 0; max-width: 100%; }
 }
 @media (max-width: 900px) {
   .ex-detail, .check-grid, .ex-layout { grid-template-columns: 1fr; }

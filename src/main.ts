@@ -17,6 +17,7 @@ function route() {
   links.forEach((a) => a.classList.toggle('on', a.dataset.route === section));
   const showEmu = section === 'emulatore' || !['esempi', 'wiki', 'esercizi', 'correzione'].includes(section);
   emu.hidden = !showEmu;
+  document.body.classList.toggle('is-emu', showEmu);
   page.hidden = showEmu;
   if (showEmu) {
     document.title = 'Assembl-Easy · Emulatore 8086';

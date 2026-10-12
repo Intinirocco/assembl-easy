@@ -3,6 +3,7 @@ import { AF, CF, DF, IF, Machine, OF, PF, SF, TF, ZF, type TraceEntry } from '..
 import { registerEmulatorLoader } from '../bus';
 import { $, esc } from '../ui/dom';
 import { CodeEditor } from '../ui/editor';
+import { PANELS, focusPanel, initDock, isOpen, onLayoutChange, resetLayout, togglePanel } from '../ui/dock';
 import template from '../examples/template.asm?raw';
 import ex1 from '../examples/somma-sottrazione.asm?raw';
 import ex2 from '../examples/input-moltiplicazione.asm?raw';
@@ -409,7 +410,7 @@ $('vars').addEventListener('click', (e) => {
     sel.value = opt.value;
   }
   ($('mem-off') as HTMLInputElement).value = hex(s.value & 0xfff0, 4);
-  showTab('mem');
+  focusPanel('mem');
   renderMem();
 });
 
@@ -585,6 +586,7 @@ function renderConsole() {
   const waiting = machine?.status === 'waiting';
   hint.textContent = waiting ? '← in attesa di input: scrivi qui' : '';
   consoleEl.classList.toggle('waiting', waiting);
+  if (waiting) focusPanel('screen');
 }
 
 function updateStatus() {
@@ -756,13 +758,7 @@ window.addEventListener('keydown', (e) => {
   }
 });
 
-// schede e formato variabili
-function showTab(name: string) {
-  document.querySelectorAll<HTMLElement>('.tab').forEach((t) => t.classList.toggle('on', t.dataset.tab === name));
-  document.querySelectorAll<HTMLElement>('.tab-body').forEach((b) => (b.hidden = b.dataset.body !== name));
-  $('vars-fmt').hidden = name !== 'vars';
-}
-document.querySelectorAll<HTMLElement>('.tab').forEach((t) => t.addEventListener('click', () => showTab(t.dataset.tab!)));
+// formato variabili
 $('vars-fmt').addEventListener('click', (e) => {
   const b = (e.target as HTMLElement).closest('[data-fmt]') as HTMLElement | null;
   if (!b) return;
@@ -810,6 +806,72 @@ function setCode(src: string) {
 }
 
 registerEmulatorLoader(setCode);
-showTab('vars');
+initDock($('dock'));
+setupLayoutMenu();
+setupScreenFont();
 renderState();
 compile();
+
+// ---------- schermo: dimensione del testo ----------
+function setupScreenFont() {
+  const KEY = 'assembl-easy:console-size';
+  let size = 14;
+  try {
+    size = Number(localStorage.getItem(KEY)) || 14;
+  } catch {
+    /* ignora */
+  }
+  const apply = () => {
+    size = Math.min(32, Math.max(10, size));
+    consoleEl.style.fontSize = `${size}px`;
+    try {
+      localStorage.setItem(KEY, String(size));
+    } catch {
+      /* ignora */
+    }
+  };
+  $('scr-minus').addEventListener('click', () => {
+    size -= 2;
+    apply();
+  });
+  $('scr-plus').addEventListener('click', () => {
+    size += 2;
+    apply();
+  });
+  apply();
+}
+
+// ---------- menu dei pannelli ----------
+function setupLayoutMenu() {
+  const btn = $('btn-layout');
+  const pop = $('layout-pop');
+  const draw = () => {
+    pop.innerHTML =
+      `<div class="lp-title">Pannelli visibili</div>` +
+      PANELS.map(
+        (p) => `<label class="lp-row"><input type="checkbox" data-panel="${p.id}" ${isOpen(p.id) ? 'checked' : ''}/> ${esc(p.title)}</label>`,
+      ).join('') +
+      `<hr><button class="mini" id="lp-reset">Ripristina disposizione</button>
+       <p class="muted small">Trascina il titolo di un pannello per spostarlo, affiancarlo o metterlo in scheda; trascina i bordi per ridimensionarlo.</p>`;
+  };
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    pop.hidden = !pop.hidden;
+    if (!pop.hidden) draw();
+  });
+  pop.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const t = e.target as HTMLElement;
+    if (t instanceof HTMLInputElement && t.dataset.panel) {
+      togglePanel(t.dataset.panel);
+      setTimeout(draw, 50);
+    } else if (t.id === 'lp-reset') {
+      resetLayout();
+      pop.hidden = true;
+    }
+  });
+  document.addEventListener('click', () => (pop.hidden = true));
+  onLayoutChange(() => {
+    if (!pop.hidden) draw();
+  });
+}

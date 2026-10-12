@@ -14,6 +14,7 @@
         <a data-route="wiki" href="#/wiki">Wiki istruzioni</a>
         <a data-route="esercizi" href="#/esercizi">Esercizi</a>
         <a data-route="correzione" href="#/correzione">Correzione</a>
+        <span id="status" class="status">—</span>
       </nav>
 
       <div id="view-emu" class="view">
@@ -42,68 +43,77 @@
               <option value="4" selected>Istantanea</option>
             </select>
           </label>
-          <span id="status" class="status">—</span>
+          <div class="tb-group layout-menu">
+            <button id="btn-layout" title="Mostra, nascondi e riposiziona i pannelli">⊞ Pannelli ▾</button>
+            <div id="layout-pop" class="layout-pop" hidden></div>
+          </div>
         </header>
 
-        <main class="emu">
-          <section class="pane p-editor">
-            <div class="pane-title">Codice sorgente
-              <span class="legend">
-                <i class="lg lg-cur"></i>prossima
-                <i class="lg lg-last"></i>ultima eseguita
-                <i class="lg lg-bp"></i>breakpoint (clic sul numero)
-              </span>
+        <main id="dock" class="dockview-theme-assembl"></main>
+
+        <!-- contenuto dei pannelli: viene spostato nel gestore di finestre -->
+        <div id="pane-store" hidden>
+          <section id="pane-editor" class="dock-pane">
+            <div class="pane-bar legend">
+              <i class="lg lg-cur"></i>prossima istruzione
+              <i class="lg lg-last"></i>ultima eseguita
+              <i class="lg lg-bp"></i>breakpoint (clic sul numero di riga)
             </div>
             <div id="editor-host"></div>
             <div id="messages" class="messages"></div>
           </section>
 
-          <section class="pane p-regs">
-            <div class="pane-title">Registri <span class="hint">clic su un registro per i dettagli</span></div>
+          <section id="pane-regs" class="dock-pane scroll">
             <div id="regs" class="regs"></div>
           </section>
 
-          <div class="bottom">
-            <section class="pane p-log">
-              <div class="pane-title">Cosa è successo</div>
-              <div id="last-step" class="last-step"></div>
-              <div id="log" class="log"></div>
-            </section>
-            <section class="pane console-pane">
-              <div class="pane-title">Schermo <span id="input-hint" class="hint"></span></div>
-              <pre id="console" class="console" tabindex="0"></pre>
-            </section>
-          </div>
+          <section id="pane-log" class="dock-pane">
+            <div id="last-step" class="last-step"></div>
+            <div id="log" class="log"></div>
+          </section>
 
-          <section class="pane p-data">
-            <div class="pane-title tabs">
-              <button class="tab on" data-tab="vars">Variabili</button>
-              <button class="tab" data-tab="mem">Memoria</button>
-              <button class="tab" data-tab="stack">Stack</button>
+          <section id="pane-screen" class="dock-pane">
+            <div class="pane-bar">
+              <span id="input-hint" class="hint"></span>
+              <span class="spacer"></span>
+              <span class="seg" title="Dimensione del testo">
+                <button id="scr-minus" aria-label="Riduci testo">A−</button><button id="scr-plus" aria-label="Ingrandisci testo">A+</button>
+              </span>
+            </div>
+            <pre id="console" class="console" tabindex="0"></pre>
+          </section>
+
+          <section id="pane-vars" class="dock-pane">
+            <div class="pane-bar">
+              <span class="muted small">Valori correnti delle variabili del programma</span>
               <span class="spacer"></span>
               <span id="vars-fmt" class="seg">
                 <button data-fmt="dec" class="on">Dec</button><button data-fmt="hex">Hex</button>
               </span>
             </div>
-            <div class="tab-body" data-body="vars"><div id="vars" class="vars"></div></div>
-            <div class="tab-body" data-body="mem" hidden>
-              <div class="mem-controls">
-                <label>Segmento
-                  <select id="mem-seg">
-                    <option value="data" selected>Dati del programma</option>
-                    <option value="ds">DS</option><option value="es">ES</option>
-                    <option value="ss">SS</option><option value="cs">CS</option>
-                  </select>
-                </label>
-                <label>Offset
-                  <input id="mem-off" value="0000" maxlength="4" spellcheck="false" />
-                </label>
-              </div>
-              <div id="mem" class="mem"></div>
-            </div>
-            <div class="tab-body" data-body="stack" hidden><div id="stack" class="stackview"></div></div>
+            <div class="scroll"><div id="vars" class="vars"></div></div>
           </section>
-        </main>
+
+          <section id="pane-mem" class="dock-pane">
+            <div class="mem-controls">
+              <label>Segmento
+                <select id="mem-seg">
+                  <option value="data" selected>Dati del programma</option>
+                  <option value="ds">DS</option><option value="es">ES</option>
+                  <option value="ss">SS</option><option value="cs">CS</option>
+                </select>
+              </label>
+              <label>Offset
+                <input id="mem-off" value="0000" maxlength="4" spellcheck="false" />
+              </label>
+            </div>
+            <div class="scroll"><div id="mem" class="mem"></div></div>
+          </section>
+
+          <section id="pane-stack" class="dock-pane scroll">
+            <div id="stack" class="stackview"></div>
+          </section>
+        </div>
       </div>
 
       <div id="view-page" class="view page" hidden></div>
