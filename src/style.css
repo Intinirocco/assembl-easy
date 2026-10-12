@@ -716,3 +716,23 @@ a.chip:hover { border-color: var(--accent); color: var(--accent-strong); }
 .how-body ol { padding-left: 20px; display: flex; flex-direction: column; gap: 6px; }
 .ck-catalog { margin: 4px 0 14px; padding: 12px 14px; background: var(--accent-soft); border-radius: 10px; font-size: 14.5px; }
 .sub { margin: 18px 0 6px; font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+
+/* correzione: riconoscimento, analisi, esplorazione */
+.detect { margin-top: 14px; padding: 14px 16px; border-radius: 12px; border: 1px solid var(--border); background: var(--panel); }
+.detect.ok { border-color: var(--accent); background: var(--accent-soft); }
+.detect.unknown { border-color: var(--warn); }
+.detect-title { font-size: 16px; }
+.detect p { margin: 6px 0 0; font-size: 14.5px; }
+.warn-inline { color: var(--warn); }
+.analysis { margin-top: 12px; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 10px 16px; }
+.analysis summary { cursor: pointer; font-weight: 700; font-size: 14px; }
+.analysis dl { margin: 10px 0 4px; display: grid; grid-template-columns: 90px minmax(0, 1fr); gap: 8px 12px; align-items: baseline; }
+.analysis dt { color: var(--muted); font-size: 12.5px; text-transform: uppercase; letter-spacing: .05em; }
+.analysis dd { margin: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.vchip { border: 1px solid var(--border); background: var(--panel-2); border-radius: 8px; padding: 2px 9px; font-size: 13.5px; }
+.vchip i { color: var(--muted); font-style: normal; margin-left: 4px; }
+.explore .tbl td { vertical-align: top; }
+.explore .tbl code { background: none; padding: 0; word-break: break-word; }
+.st-ok { color: var(--ok); white-space: nowrap; }
+.st-error, .st-timeout { color: var(--err-line); }
+.st-waiting { color: var(--warn); }

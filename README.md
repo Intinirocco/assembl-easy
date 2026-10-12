@@ -147,6 +147,26 @@ I **test automatici** per ogni esercizio comprendono:
 Il report raggruppa i casi, mostra per i primi falliti i **valori usati** (`n1 = 200, n2 = 3`) e cosa si
 aspettava (`massimo: atteso 200, ottenuto 3`), e riduce a una riga i casi superati.
 
+### La pagina Correzione: riconoscimento automatico
+
+Nella modalità **automatica** (predefinita) non serve scegliere l'esercizio dalla tendina:
+
+1. **Analisi del codice** (`src/emu/analyze.ts`): variabili dichiarate (tipo, dimensione, se sono *ingressi* —lette e mai
+   scritte— o *uscite* —scritte dal programma), uso della tastiera (`int 21h` con AH = 1/7/8/0Ah, `scan_num`), stampa nel
+   terminale, istruzioni usate.
+2. **Riconoscimento** (`src/emu/detect.ts`):
+   - un esercizio con variabili è candidato se il programma le dichiara **tutte con lo stesso nome** e se esse
+     costituiscono la parte principale delle variabili del programma (almeno il 60%: così `msg` da sola non fa scambiare
+     un programma qualsiasi per "Ciao mondo");
+   - tra i candidati si sceglie quello che supera più casi (esecuzione di un campione di test) e, a parità, quello più
+     vicino alla consegna scritta;
+   - un esercizio senza variabili (solo terminale) viene riconosciuto solo se il comportamento coincide (≥ 95%).
+3. **Verifica completa** con tutti i test dell'esercizio riconosciuto più quelli dell'utente. Gli altri candidati con
+   le stesse variabili sono proposti come pulsanti nel riquadro "Esercizio riconosciuto".
+4. **Se non riconosce nulla**: nessun confronto con risultati attesi (non esistono), ma **esplorazione**: il programma è
+   eseguito con valori limite e casuali per gli ingressi e con sequenze di tasti, e si mostra una tabella *valori →
+   variabili modificate, terminale, esito*; si evidenziano in rosso solo errori veri (divisione per zero, ciclo infinito).
+
 ### Verifica dei test (`npm test`)
 
 - ogni esercizio: la soluzione di riferimento supera **tutti** i casi base e automatici;
