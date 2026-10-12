@@ -351,7 +351,7 @@ quadrato endp
 `),
     notes: [
       { code: 'call quadrato', text: 'Mette sullo stack l\'indirizzo dell\'istruzione successiva e salta alla procedura.' },
-      { code: 'quadrato proc … ret', text: 'La procedura riceve il parametro in AL e restituisce il risultato in AX (convenzione: si decide chi usa quali registri).' },
+      { code: 'quadrato proc', text: 'Da qui al `endp` c\'è la procedura: riceve il parametro in AL e restituisce il risultato in AX (convenzione: si decide chi usa quali registri).' },
       { code: 'ret', text: 'Toglie dallo stack l\'indirizzo di ritorno e vi salta: l\'esecuzione riprende dopo la CALL.' },
       { code: '(posizione)', text: 'La procedura sta dopo il codice principale: se fosse prima verrebbe eseguita anche senza CALL.' },
     ],

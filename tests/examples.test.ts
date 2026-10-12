@@ -49,3 +49,17 @@ describe('tag degli esempi', () => {
     expect(both.length).toBeLessThan(one.length);
   });
 });
+
+describe('spiegazioni collegate al codice', () => {
+  it('ogni spiegazione (tranne quelle generiche) si aggancia ad almeno una riga', async () => {
+    const { matchLines } = await import('../src/pages/examples');
+    const orphans: string[] = [];
+    for (const e of EXAMPLES) {
+      for (const n of e.notes) {
+        if (n.code.startsWith('(')) continue;
+        if (matchLines(e.code, n.code).length === 0) orphans.push(`${e.id}: ${n.code}`);
+      }
+    }
+    expect(orphans).toEqual([]);
+  });
+});
