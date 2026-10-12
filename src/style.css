@@ -474,3 +474,82 @@ button.big { padding: 11px 20px; font-size: 16px; border-radius: 10px; }
   .filter-row { flex-direction: column; gap: 4px; }
     .reg-cols { grid-template-columns: 1fr; }
 }
+
+/* ============ telefono (solo schermi stretti: il computer resta com'è) ============ */
+.term-input-bar { display: none; }
+@media (max-width: 760px) {
+  :root { --lh: 24px; }
+  body { font-size: 16px; }
+  .wide-only { display: none; }
+
+  .topnav { height: 52px; padding: 0 6px; }
+  .topnav a { padding: 0 12px; font-size: 15px; }
+  .topnav a.brand { margin-right: 4px; font-size: 16px; }
+  .topnav a.brand small { display: none; }
+
+  .toolbar { padding: 8px 10px; gap: 8px; }
+  .tb-group { width: 100%; }
+  .tb-group + .tb-group { padding-left: 0; border-left: 0; }
+  .tb-speed, .layout-menu { display: none; }
+  .toolbar button, .toolbar select { min-height: 46px; font-size: 16px; }
+  /* comandi di esecuzione: una riga a tutta larghezza, solo icone (Run con testo) */
+  .tb-group:nth-child(3) { display: grid; grid-template-columns: 1.6fr 1fr 1fr 1fr 1fr; gap: 6px; }
+  .tb-group:nth-child(3) button { padding: 8px 4px; }
+  .tb-group:nth-child(3) .lb { display: none; }
+  #btn-run .lb { display: inline; }
+  .tb-group:nth-child(2) { display: none; } /* Compila: su telefono l'assemblaggio è automatico */
+  .tb-group:nth-child(3) { order: 1; }
+  .toolbar .status { order: 2; }
+  .tb-group:first-child { order: 3; }
+  .tb-group:first-child select { flex: 1; min-width: 0; }
+  .toolbar .status { display: block; flex-basis: 100%; margin: 0; max-width: 100%; text-align: center; background: var(--panel-2); color: var(--muted); }
+  .toolbar .status.ok { color: var(--ok); }
+  .toolbar .status.run, .toolbar .status.wait { color: var(--accent-strong); background: var(--accent-soft); }
+  .toolbar .status.err { color: var(--err-line); background: var(--err); }
+
+  #view-emu { overflow: hidden; }
+  #dock { min-height: 0; padding: 0; }
+  #dock.mobile-dock { display: flex; flex-direction: column; padding: 8px 8px 0; background: var(--bg); }
+  .mobile-dock .dock-pane { display: none; flex: 1; min-height: 0; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  .mobile-dock .dock-pane.on { display: flex; }
+  .m-tabs { display: flex; gap: 6px; overflow-x: auto; padding: 8px 0 10px; flex: none; -webkit-overflow-scrolling: touch; }
+  .m-tab { white-space: nowrap; padding: 8px 14px; border-radius: 999px; min-height: 44px; font-size: 15px; }
+  .m-tab.on { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
+
+  .editor { font: 16px/24px var(--mono); }
+  .pane-bar.legend { display: none; }
+  .console { font-size: 15px; }
+  .term-input-bar { display: flex; gap: 8px; padding: 8px; border-top: 1px solid var(--border); background: var(--panel); flex: none; }
+  .term-input-bar input { flex: 1; min-width: 0; font: 16px var(--mono); padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--panel); color: var(--text); }
+  .term-input-bar button { min-height: 46px; }
+  .term-tools { top: 6px; }
+
+  .reg-cols { grid-template-columns: 1fr; }
+  .regtbl { font-size: 16px; }
+  .mem { font-size: 12px; }
+  .vtable { font-size: 14px; }
+  /* variabili: una scheda per riga invece di una tabella larga */
+  .vtable, .vtable tbody { display: block; width: 100%; }
+  .vtable thead { display: none; }
+  .vtable .var-row { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; padding: 10px 14px; border-bottom: 1px solid var(--border); }
+  .vtable .var-row td { padding: 0; border: 0; }
+  .vtable .v-name { grid-row: 1; grid-column: 1; font-size: 16px; }
+  .vtable .v-type { grid-row: 1; grid-column: 2; text-align: right; }
+  .vtable .v-val { grid-row: 2; grid-column: 1 / -1; word-break: break-word; }
+  .vtable .v-addr { grid-row: 3; grid-column: 1 / -1; font-size: 12px; }
+  .pane-bar .muted { display: none; }
+  .log-row { grid-template-columns: 30px 56px minmax(0, 1fr); padding: 8px 10px; }
+  .last-step { max-height: none; }
+
+  .page { padding: 18px 14px 56px; }
+  .page h1, .ex-hero h1 { font-size: 24px; }
+  .modal { padding: 16px; }
+  .modal-overlay { padding: 4vh 10px; }
+  .rp-hex { font-size: 28px; }
+  .bit { width: 20px; }
+  .bit.nib { margin-right: 5px; }
+  .codewin .cw-body { font-size: 13.5px; }
+  .pager-cards { grid-template-columns: 1fr; }
+  .ex-grid { grid-template-columns: 1fr; }
+  .chip { padding: 8px 14px; }
+}

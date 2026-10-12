@@ -23,7 +23,6 @@ export class CodeEditor {
 
   private gutter: HTMLElement;
   private backdrop: HTMLElement;
-  private readonly lh = 22;
 
   constructor(parent: HTMLElement, private opts: EditorOptions = {}) {
     parent.classList.add('editor');
@@ -115,8 +114,9 @@ export class CodeEditor {
 
   scrollToLine(ln: number) {
     const t = this.textarea;
-    const y = (ln - 1) * this.lh;
-    if (y < t.scrollTop || y > t.scrollTop + t.clientHeight - this.lh * 3) {
+    const lh = (this.backdrop.firstElementChild as HTMLElement | null)?.offsetHeight || 22;
+    const y = (ln - 1) * lh;
+    if (y < t.scrollTop || y > t.scrollTop + t.clientHeight - lh * 3) {
       t.scrollTop = Math.max(0, y - t.clientHeight / 2);
       this.syncScroll();
     }

@@ -14,6 +14,16 @@ export const PANELS = [
 ] as const;
 
 const KEY = 'assembl-easy:layout-v2';
+
+/** Su schermi stretti (telefono) niente finestre trascinabili: una vista alla volta con schede in basso. */
+const mq = window.matchMedia('(max-width: 760px)');
+export const isMobile = mq.matches;
+const SHORT: Record<string, string> = {
+  editor: 'Codice', regs: 'Registri', vars: 'Variabili', screen: 'Terminale', log: 'Cosa succede', mem: 'Memoria', stack: 'Stack',
+};
+const MOBILE_ORDER = ['editor', 'regs', 'vars', 'screen', 'log', 'mem', 'stack'];
+let mobileActive = 'editor';
+
 const theme: DockviewTheme = { name: 'assembl', className: 'dockview-theme-assembl', gap: 10 };
 
 let api: DockviewApi | null = null;
@@ -74,7 +84,41 @@ function buildLayout() {
   listeners.forEach((f) => f());
 }
 
+function showMobile(id: string) {
+  mobileActive = id;
+  document.querySelectorAll<HTMLElement>('#dock > .dock-pane').forEach((p) => p.classList.toggle('on', p.id === `pane-${id}`));
+  document.querySelectorAll<HTMLElement>('#dock .m-tab').forEach((t) => t.classList.toggle('on', t.dataset.id === id));
+  window.dispatchEvent(new Event('resize'));
+}
+
+function initMobile(el: HTMLElement) {
+  document.body.classList.add('is-mobile');
+  el.classList.add('mobile-dock');
+  // lo stato passa dalla barra di navigazione alla barra degli strumenti
+  const st = document.getElementById('status');
+  if (st) document.querySelector('.toolbar')?.appendChild(st);
+  for (const id of MOBILE_ORDER) {
+    const pane = document.getElementById(`pane-${id}`);
+    if (pane) el.appendChild(pane);
+  }
+  const bar = document.createElement('nav');
+  bar.className = 'm-tabs';
+  bar.innerHTML = MOBILE_ORDER.map((id) => `<button class="m-tab" data-id="${id}">${SHORT[id]}</button>`).join('');
+  bar.addEventListener('click', (e) => {
+    const b = (e.target as HTMLElement).closest('.m-tab') as HTMLElement | null;
+    if (b) showMobile(b.dataset.id!);
+  });
+  el.appendChild(bar);
+  showMobile(mobileActive);
+}
+
 export function initDock(el: HTMLElement) {
+  // passando da telefono a computer (o viceversa) si ricarica: le due disposizioni sono diverse
+  mq.addEventListener('change', () => location.reload());
+  if (isMobile) {
+    initMobile(el);
+    return;
+  }
   host = el;
   const elements = new Map<string, HTMLElement>();
   api = createDockview(el, {
@@ -95,7 +139,7 @@ export function initDock(el: HTMLElement) {
 }
 
 export function resetLayout() {
-  if (!api || !host) return;
+  if (isMobile || !api || !host) return;
   try {
     localStorage.removeItem(KEY);
   } catch {
@@ -106,11 +150,16 @@ export function resetLayout() {
 }
 
 export function isOpen(id: string): boolean {
+  if (isMobile) return mobileActive === id;
   return !!api?.getPanel(id);
 }
 
 /** Mostra un pannello chiuso oppure lo chiude. */
 export function togglePanel(id: string) {
+  if (isMobile) {
+    showMobile(id);
+    return;
+  }
   if (!api) return;
   const p = api.getPanel(id);
   if (p) p.api.close();
@@ -120,6 +169,10 @@ export function togglePanel(id: string) {
 
 /** Porta in primo piano un pannello (riaprendolo se serve). */
 export function focusPanel(id: string) {
+  if (isMobile) {
+    if (mobileActive !== id) showMobile(id);
+    return;
+  }
   if (!api) return;
   const p = api.getPanel(id);
   if (p) p.api.setActive();

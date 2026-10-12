@@ -11,7 +11,7 @@
         <a class="brand" href="#/emulatore">Assembl<b>Easy</b> <small>8086</small></a>
         <a data-route="emulatore" href="#/emulatore">Emulatore</a>
         <a data-route="esempi" href="#/esempi">Esempi</a>
-        <a data-route="wiki" href="#/wiki">Wiki istruzioni</a>
+        <a data-route="wiki" href="#/wiki">Wiki<span class="wide-only"> istruzioni</span></a>
         <a data-route="esercizi" href="#/esercizi">Esercizi</a>
         <a data-route="correzione" href="#/correzione">Correzione</a>
         <span id="status" class="status">—</span>
@@ -28,11 +28,11 @@
             <button id="btn-compile" class="primary" title="Assembla il programma (F9)">Compila</button>
           </div>
           <div class="tb-group">
-            <button id="btn-run" class="go" title="Esegue fino alla fine o a un breakpoint (F5)">▶ Run</button>
-            <button id="btn-step" title="Esegue una sola istruzione (F8)">⏭ Single step</button>
-            <button id="btn-back" title="Annulla l'ultima istruzione (Shift+F8)">⏮ Step back</button>
-            <button id="btn-stop" title="Interrompe l'esecuzione">⏹ Stop</button>
-            <button id="btn-reset" title="Riporta il programma all'inizio">⟲ Reset</button>
+            <button id="btn-run" class="go" title="Esegue fino alla fine o a un breakpoint (F5)"><span class="ic">▶</span><span class="lb"> Run</span></button>
+            <button id="btn-step" title="Esegue una sola istruzione (F8)"><span class="ic">⏭</span><span class="lb"> Single step</span></button>
+            <button id="btn-back" title="Annulla l'ultima istruzione (Shift+F8)"><span class="ic">⏮</span><span class="lb"> Step back</span></button>
+            <button id="btn-stop" title="Interrompe l'esecuzione"><span class="ic">⏹</span><span class="lb"> Stop</span></button>
+            <button id="btn-reset" title="Riporta il programma all'inizio"><span class="ic">⟲</span><span class="lb"> Reset</span></button>
           </div>
           <label class="tb-speed">Velocità
             <select id="speed" title="Velocità di Run">
@@ -80,6 +80,11 @@
               </span>
             </div>
             <pre id="console" class="console" tabindex="0"></pre>
+            <!-- solo su telefono: la tastiera si apre su un campo di testo -->
+            <div id="term-input-bar" class="term-input-bar">
+              <input id="term-input" placeholder="Scrivi qui l'input del programma" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="send" />
+              <button id="term-enter" class="primary">Invio</button>
+            </div>
           </section>
 
           <section id="pane-vars" class="dock-pane">

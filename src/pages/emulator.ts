@@ -3,7 +3,7 @@ import { AF, CF, DF, IF, Machine, OF, PF, SF, TF, ZF, type TraceEntry } from '..
 import { registerEmulatorLoader } from '../bus';
 import { esc } from '../ui/dom';
 import { CodeEditor } from '../ui/editor';
-import { PANELS, focusPanel, initDock, isOpen, onLayoutChange, resetLayout, togglePanel } from '../ui/dock';
+import { PANELS, focusPanel, initDock, isMobile, isOpen, onLayoutChange, resetLayout, togglePanel } from '../ui/dock';
 import template from '../examples/template.asm?raw';
 import ex1 from '../examples/somma-sottrazione.asm?raw';
 import ex2 from '../examples/input-moltiplicazione.asm?raw';
@@ -588,13 +588,16 @@ for (const id of ['last-step', 'log']) {
 }
 
 // ---------- terminale e stato ----------
+let wasWaiting = false;
 function renderConsole() {
   consoleEl.textContent = machine ? machine.out : '';
   consoleEl.scrollTop = consoleEl.scrollHeight;
   const waiting = machine?.status === 'waiting';
   hint.textContent = waiting ? 'In attesa di input: scrivi qui' : '';
   consoleEl.classList.toggle('waiting', waiting);
-  if (waiting) focusPanel('screen');
+  // si porta in primo piano solo quando l'attesa inizia, per non togliere la scheda all'utente
+  if (waiting && !wasWaiting) focusPanel('screen');
+  wasWaiting = waiting;
 }
 
 function updateStatus() {
@@ -683,7 +686,7 @@ function runLoop() {
     timer = window.setTimeout(runLoop, DELAYS[lvl]);
   } else {
     timer = null;
-    if (machine.status === 'waiting') consoleEl.focus();
+    if (machine.status === 'waiting') (isMobile ? termInput : consoleEl).focus();
   }
 }
 
@@ -706,7 +709,7 @@ $('btn-step').addEventListener('click', () => {
   if (machine.status === 'halted' || machine.status === 'error') return;
   machine.step();
   renderState();
-  if (machine.status === 'waiting') consoleEl.focus();
+  if (machine.status === 'waiting') (isMobile ? termInput : consoleEl).focus();
 });
 $('btn-back').addEventListener('click', () => {
   if (!machine) return;
@@ -749,6 +752,33 @@ consoleEl.addEventListener('keydown', (e) => {
     machine.status = 'running';
     timer = window.setTimeout(runLoop, 0);
   }
+});
+
+// telefono: la tastiera virtuale si apre su un campo di testo e ogni carattere viene inviato al programma
+const termInput = $<HTMLInputElement>('term-input');
+function sendToProgram(k: string) {
+  if (!machine) return;
+  machine.sendKey(k);
+  if (machine.status === 'waiting') {
+    machine.status = 'running';
+    timer = window.setTimeout(runLoop, 0);
+  }
+}
+termInput.addEventListener('input', () => {
+  for (const ch of termInput.value) sendToProgram(ch);
+  termInput.value = '';
+});
+termInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    sendToProgram('\r');
+  } else if (e.key === 'Backspace' && termInput.value === '') {
+    sendToProgram('\b');
+  }
+});
+$('term-enter').addEventListener('click', () => {
+  sendToProgram('\r');
+  termInput.focus();
 });
 
 // scorciatoie

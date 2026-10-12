@@ -16,6 +16,9 @@ moderna, senza installare nulla e con una sintassi compatibile con quella di emu
   che si possono **trascinare** (affiancare, impilare in schede, rendere fluttuanti) e **ridimensionare**; la
   disposizione viene ricordata nel browser e si ripristina dal menu "Pannelli", che permette anche di
   chiudere e riaprire ogni pannello. Il testo del terminale si ingrandisce con A+/A−.
+- **Telefono**: sotto i 760 px di larghezza l'emulatore mostra una sola vista alla volta con schede in basso
+  (Codice, Registri, Variabili, Terminale, …), comandi grandi e un campo di testo per la tastiera del telefono;
+  il terminale si porta in primo piano quando il programma attende un input. Su computer non cambia nulla.
 - **Esecuzione**: Compila, Run, Single step, Step back (torna indietro di un'istruzione), Stop, Reset,
   velocità regolabile.
 - **Registri** in due tabelle: AX/BX/CX/DX con parte alta (H) e bassa (L), poi SI, DI, BP, SP, IP e segmenti; le
