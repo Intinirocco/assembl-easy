@@ -8,7 +8,7 @@ import { openInEmulator } from '../bus';
 import { esc, store } from '../ui/dom';
 import { CodeEditor } from '../ui/editor';
 import { renderReport } from '../ui/report';
-import { TEST_HELP, TestRows } from '../ui/testrows';
+import { TestRows } from '../ui/testrows';
 
 const saved = store<{ consegna: string; code: string; exercise: string }>('check2', {
   consegna: '',
@@ -60,7 +60,7 @@ function exploreTable(rows: ExploreRow[]): string {
 }
 
 function bannerRecognized(best: Candidate, others: Candidate[]): string {
-  const alts = others.filter((c) => c.signature && c.ex.id !== best.ex.id).slice(0, 3);
+  const alts = others.filter((c) => c.signature && c.ex.id !== best.ex.id && c.rate >= 0.4).slice(0, 3);
   const sizeWarn = best.sizeMismatch.length
     ? `<br><span class="warn-inline">Attenzione: ${best.sizeMismatch.map((n) => `<code>${esc(n)}</code>`).join(', ')} ha un tipo diverso (DB/DW) da quello dell'esercizio.</span>`
     : '';
@@ -91,52 +91,25 @@ const BANNER_UNKNOWN = `<div class="detect unknown">
 export function renderCheck(root: HTMLElement) {
   const state = saved.get();
   const mode0 = state.exercise || 'auto';
+  const placeholder = `<div class="rep rep-idle">
+      <div class="rep-title">Come verrà corretto</div>
+      <ol class="ck-steps">
+        <li><b>Assemblaggio</b>: gli errori di sintassi compaiono in rosso sulla riga giusta.</li>
+        <li><b>Analisi</b>: variabili (ingressi e uscite), tastiera, terminale, istruzioni usate.</li>
+        <li><b>Riconoscimento</b> dell'esercizio del catalogo dai nomi delle variabili e dal comportamento.</li>
+        <li><b>Test</b>: casi base, decine di casi automatici (valori limite e casuali) e i tuoi.</li>
+      </ol>
+      <p class="rep-hint">Incolla il codice e premi <b>Correggi</b>.</p>
+    </div>`;
+
   root.innerHTML = `
-    <div class="browse-head">
-      <div>
+    <div class="crumbs ck-crumbs"><span class="muted">Incolla il tuo codice e verifica che faccia ciò che deve</span></div>
+    <div class="ck-page">
+      <aside class="ck-left">
         <h1>Correzione</h1>
-        <p>Incolla il tuo codice e premi <b>Correggi</b>: il sito analizza il programma, riconosce l'esercizio del catalogo a cui
-        somiglia e lo verifica con decine di casi generati in automatico. Le righe con errori sono evidenziate in rosso.</p>
-      </div>
-    </div>
 
-    <details class="how">
-      <summary>Come funziona la correzione automatica</summary>
-      <div class="how-body">
-        <ol>
-          <li><b>Assemblaggio</b>: errori di sintassi, istruzioni inesistenti, operandi incompatibili o etichette mancanti
-            vengono segnalati sulla riga giusta, in rosso.</li>
-          <li><b>Analisi del codice</b>: quali variabili dichiara (e quali sono ingressi o uscite), se legge dalla tastiera,
-            se stampa, quali istruzioni usa.</li>
-          <li><b>Riconoscimento</b> (modalità automatica): confronta i nomi delle variabili con quelli degli esercizi e, per
-            quelli con le stesse variabili, sceglie in base a quanti test supera. Un esercizio che usa solo il terminale
-            viene riconosciuto se il comportamento coincide.</li>
-          <li><b>Esecuzione</b>: ogni caso parte da zero, con valori iniziali e tasti digitati; poi si confrontano variabili,
-            registri e terminale con quanto atteso. Errori a runtime e cicli infiniti fanno fallire il caso.</li>
-          <li><b>Se non riconosce nulla</b>: mostra il comportamento con valori limite e casuali (nessun "giusto o sbagliato",
-            perché non c'è un risultato di riferimento) e controlla che il programma termini sempre senza errori.</li>
-        </ol>
-        <p>Puoi sempre forzare un esercizio dalla tendina o aggiungere casi tuoi: vengono eseguiti insieme agli altri.</p>
-      </div>
-    </details>
-
-    <div class="check-grid">
-      <section>
-        <label class="field">Consegna (facoltativa: aiuta il riconoscimento quando due esercizi hanno le stesse variabili)
-          <textarea id="ck-consegna" rows="3" placeholder="Es. Leggi due cifre e stampa la loro somma…"></textarea>
-        </label>
-        <div class="pane">
-          <div class="pane-title">Codice da correggere</div>
-          <div id="ck-editor" class="editor tall"></div>
-        </div>
-        <div class="actions">
-          <button id="ck-run" class="primary big">✓ Correggi</button>
-          <button id="ck-emu" class="big">Apri nell'emulatore</button>
-        </div>
-      </section>
-
-      <section>
-        <label class="field">Modalità
+        <section class="ck-card">
+          <h3>Modalità</h3>
           <select id="ck-ex">
             <option value="auto">Automatica: riconosci l'esercizio dal codice</option>
             <option value="none">Solo i casi scritti da me</option>
@@ -144,15 +117,50 @@ export function renderCheck(root: HTMLElement) {
               ${EXERCISES.map((e) => `<option value="${e.id}">${esc(e.title)}</option>`).join('')}
             </optgroup>
           </select>
-        </label>
-        <div id="ck-catalog" class="ck-catalog" hidden></div>
+          <div id="ck-catalog" class="ck-catalog" hidden></div>
+          <p class="ck-note">In automatica il sito analizza il programma e sceglie da solo i test adatti.
+          Se due esercizi hanno le stesse variabili aiutalo con la consegna.</p>
+        </section>
 
-        <h3 class="sub">I tuoi casi di prova (facoltativi)</h3>
-        <div id="ck-rows" class="user-tests"></div>
-        <details class="help small"><summary>Come compilare i campi</summary>${TEST_HELP}</details>
+        <section class="ck-card">
+          <h3>Consegna <span class="muted">(facoltativa)</span></h3>
+          <textarea id="ck-consegna" rows="4" placeholder="Es. Leggi due cifre e stampa la loro somma…"></textarea>
+        </section>
 
-        <div id="ck-report"></div>
+        <details class="ck-card how">
+          <summary>Come funziona la correzione</summary>
+          <div class="how-body">
+            <ol>
+              <li><b>Assemblaggio</b>: errori di sintassi, istruzioni inesistenti, operandi incompatibili, etichette mancanti.</li>
+              <li><b>Analisi del codice</b>: variabili e ruoli, uso di tastiera e terminale, istruzioni.</li>
+              <li><b>Riconoscimento</b>: confronta i nomi delle variabili con quelli degli esercizi e sceglie in base ai test superati.</li>
+              <li><b>Esecuzione</b>: ogni caso parte da zero con valori e tasti stabiliti; si confrontano variabili, registri e terminale.</li>
+              <li><b>Nessun esercizio riconosciuto</b>: si mostra il comportamento con valori diversi e si segnalano solo errori veri.</li>
+            </ol>
+          </div>
+        </details>
+      </aside>
+
+      <section class="ck-center">
+        <div class="pane ck-editor-pane">
+          <div class="pane-title">Codice da correggere</div>
+          <div id="ck-editor" class="editor tall"></div>
+        </div>
+        <div class="actions">
+          <button id="ck-run" class="primary big">✓ Correggi</button>
+          <button id="ck-emu" class="big">Apri nell'emulatore</button>
+        </div>
+
+        <section class="ck-card ck-cases">
+          <div class="ck-cases-head">
+            <h3>I tuoi casi di prova <span class="muted">(facoltativi)</span></h3>
+            <p>Vengono eseguiti insieme ai test del catalogo. Compila solo i campi che ti servono.</p>
+          </div>
+          <div id="ck-rows" class="user-tests tr-wide"></div>
+        </section>
       </section>
+
+      <aside class="ck-right"><div id="ck-report">${placeholder}</div></aside>
     </div>`;
 
   const consegna = root.querySelector<HTMLTextAreaElement>('#ck-consegna')!;

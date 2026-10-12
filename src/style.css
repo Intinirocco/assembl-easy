@@ -736,3 +736,59 @@ a.chip:hover { border-color: var(--accent); color: var(--accent-strong); }
 .st-ok { color: var(--ok); white-space: nowrap; }
 .st-error, .st-timeout { color: var(--err-line); }
 .st-waiting { color: var(--warn); }
+
+/* ============ pagina Correzione ============ */
+.ck-crumbs { margin-bottom: 8px; }
+.ck-page { display: grid; grid-template-columns: minmax(300px, 380px) minmax(0, 1fr) minmax(320px, 440px); gap: 24px; align-items: start; }
+.ck-left h1 { margin: 0 0 14px; font-size: 28px; }
+.ck-left, .ck-right { position: sticky; top: 12px; max-height: calc(100vh - 90px); overflow: auto; padding-right: 4px; }
+.ck-card { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; margin-bottom: 14px; }
+.ck-card h3 { margin: 0 0 10px; font-size: 12.5px; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); }
+.ck-card select, .ck-card textarea { width: 100%; }
+.ck-note { margin: 10px 0 0; font-size: 13.5px; color: var(--muted); }
+.ck-card.how summary { cursor: pointer; font-weight: 700; font-size: 14px; }
+.ck-card.how .how-body { margin-top: 10px; }
+.ck-card.how ol { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; font-size: 14px; }
+.ck-center { min-width: 0; }
+.ck-editor-pane { box-shadow: 0 1px 3px rgba(20, 24, 40, .06); }
+.ck-center .editor.tall { height: calc(100vh - 320px); min-height: 380px; }
+.ck-cases { margin-top: 8px; padding: 18px 20px; }
+.ck-cases-head h3 { margin: 0 0 4px; }
+.ck-cases-head p { margin: 0 0 14px; color: var(--muted); font-size: 14.5px; }
+.ck-right .rep { margin-top: 0; }
+.ck-steps { margin: 8px 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; font-size: 14.5px; }
+.rep-idle .rep-title { color: var(--text); }
+
+/* elenco dei casi di prova (condiviso con la pagina degli esercizi) */
+.tr-cases { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
+.tr-wide .tr-cases { grid-template-columns: repeat(auto-fill, minmax(420px, 1fr)); }
+.tr-case { background: var(--panel-2); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px 14px; }
+.tr-case-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.tr-num { width: 24px; height: 24px; border-radius: 50%; background: var(--accent); color: var(--accent-text); display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; }
+.tr-del { margin-left: auto; padding: 4px 10px; font-size: 13px; border-radius: 8px; color: var(--err-line); }
+.tr-del:hover { border-color: var(--err-line); color: var(--err-line); }
+.tr-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 12px; }
+.user-tests:not(.tr-wide) .tr-fields { grid-template-columns: minmax(0, 1fr); }
+.tr-fields label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--muted); font-weight: 600; }
+.tr-fields label.wide { grid-column: 1 / -1; }
+.tr-fields input { font: 14px var(--mono); padding: 9px 11px; width: 100%; }
+.tr-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+.add-case { flex: 1 1 240px; padding: 12px 18px; font-size: 16px; font-weight: 600; border: 2px dashed var(--accent); background: var(--accent-soft); color: var(--accent-strong); border-radius: 12px; }
+.add-case:hover { background: var(--accent); color: var(--accent-text); border-style: solid; }
+.help-toggle { padding: 12px 18px; font-size: 16px; font-weight: 600; border-radius: 12px; border: 1px solid var(--accent); color: var(--accent-strong); background: var(--panel); }
+.help-toggle[aria-expanded="true"] { background: var(--accent); color: var(--accent-text); }
+.tr-help { display: none; margin-top: 12px; padding: 14px 18px; border-radius: 12px; background: var(--panel-2); border: 1px solid var(--border); font-size: 14.5px; }
+.tr-help.open { display: block; }
+.tr-help ul { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 8px; }
+
+@media (max-width: 1500px) {
+  .ck-page { grid-template-columns: minmax(280px, 360px) minmax(0, 1fr); }
+  .ck-right { position: static; grid-column: 2; max-height: none; }
+}
+@media (max-width: 900px) {
+  .ck-page { grid-template-columns: minmax(0, 1fr); }
+  .ck-left, .ck-right { position: static; max-height: none; grid-column: 1; }
+  .ck-center .editor.tall { height: 420px; }
+  .tr-wide .tr-cases { grid-template-columns: minmax(0, 1fr); }
+  .tr-fields { grid-template-columns: minmax(0, 1fr); }
+}

@@ -51,8 +51,8 @@ moderna, senza installare nulla e con una sintassi compatibile con quella di emu
   intersezione), difficoltà e stato, con consegna, suggerimenti, soluzione nascosta e
   **correzione automatica**: il programma viene eseguito su più casi di prova (valori iniziali, input da tastiera,
   variabili/registri/output attesi) e il sito mostra quali falliscono. I progressi sono salvati nel browser.
-- **Correzione** (`#/correzione`): si incolla il codice e si sceglie un esercizio del catalogo oppure si
-  definiscono i propri casi di prova. Le righe con errori di assemblaggio o di esecuzione (divisione per zero,
+- **Correzione** (`#/correzione`): tre colonne (impostazioni, editor grande, risultati). Si incolla il codice e il sito
+  riconosce l'esercizio; si può forzare un esercizio o aggiungere i propri casi di prova. Le righe con errori di assemblaggio o di esecuzione (divisione per zero,
   ciclo infinito, …) sono evidenziate in rosso.
 
 La correzione è **deterministica e senza servizi esterni**: nessun costo e nessun backend. Non verifica la

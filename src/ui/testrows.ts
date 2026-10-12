@@ -57,12 +57,12 @@ export function rowToTest(r: Row): TestCase {
 }
 
 const FIELDS: [keyof Row, string, string][] = [
-  ['name', 'Nome', 'Caso 1'],
+  ['name', 'Nome del caso', 'Caso 1'],
   ['init', 'Valori iniziali', 'n1=10, n2=20'],
   ['input', 'Input da tastiera', '12\\n30\\n'],
-  ['vars', 'Variabili finali', 'risultato=30'],
-  ['regs', 'Registri finali', 'cx=30'],
-  ['output', 'Output atteso (separa con |)', 'somma: 30'],
+  ['vars', 'Variabili finali attese', 'risultato=30'],
+  ['regs', 'Registri finali attesi', 'cx=30'],
+  ['output', 'Output atteso nel terminale (separa con |)', 'somma: 30'],
 ];
 
 export const TEST_HELP = `
@@ -109,6 +109,13 @@ export class TestRows {
         this.rows.push(EMPTY(this.rows.length + 1));
         this.save();
         this.draw();
+        // porta il cursore sul primo campo del nuovo caso
+        const cards = this.el.querySelectorAll('.tr-case');
+        (cards[cards.length - 1]?.querySelector('input[data-key="init"]') as HTMLInputElement | null)?.focus();
+      } else if (t.closest('[data-help]')) {
+        const panel = this.el.querySelector('.tr-help')!;
+        const open = panel.classList.toggle('open');
+        (t.closest('[data-help]') as HTMLElement).setAttribute('aria-expanded', String(open));
       }
     });
     this.draw();
@@ -124,18 +131,29 @@ export class TestRows {
   }
 
   private draw() {
-    this.el.innerHTML =
-      this.rows
+    const helpOpen = this.el.querySelector('.tr-help')?.classList.contains('open') ?? false;
+    this.el.innerHTML = `
+      <div class="tr-cases">${this.rows
         .map(
-          (r, i) => `<fieldset class="case"><legend>Caso ${i + 1}
-          <button class="mini danger" data-del="${i}" type="button">Rimuovi</button></legend>
-          ${FIELDS.map(
-            ([k, label, ph]) =>
-              `<label>${label}<input data-row="${i}" data-key="${k}" value="${esc(r[k])}" placeholder="${esc(ph)}" spellcheck="false" autocomplete="off" /></label>`,
-          ).join('')}
-        </fieldset>`,
+          (r, i) => `<div class="tr-case">
+            <div class="tr-case-head">
+              <span class="tr-num">${i + 1}</span><b>Caso di prova</b>
+              <button class="tr-del" data-del="${i}" type="button" title="Rimuovi questo caso">✕ Rimuovi</button>
+            </div>
+            <div class="tr-fields">
+              ${FIELDS.map(
+                ([k, label, ph]) =>
+                  `<label class="${k === 'name' ? 'wide' : ''}"><span>${label}</span><input data-row="${i}" data-key="${k}" value="${esc(r[k])}" placeholder="${esc(ph)}" spellcheck="false" autocomplete="off" /></label>`,
+              ).join('')}
+            </div>
+          </div>`,
         )
-        .join('') + `<button class="mini" data-add type="button">+ Aggiungi caso</button>`;
+        .join('')}</div>
+      <div class="tr-actions">
+        <button class="add-case" data-add type="button">＋ Aggiungi un caso di prova</button>
+        <button class="help-toggle" data-help type="button" aria-expanded="${helpOpen}">ⓘ Come compilare i campi</button>
+      </div>
+      <div class="tr-help${helpOpen ? ' open' : ''}">${TEST_HELP}</div>`;
   }
 
   /** righe in cui almeno un campo (oltre al nome) è compilato */

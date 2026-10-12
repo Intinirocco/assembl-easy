@@ -4,7 +4,7 @@ import { openInEmulator } from '../bus';
 import { esc, inline, store } from '../ui/dom';
 import { CodeEditor } from '../ui/editor';
 import { renderReport } from '../ui/report';
-import { TEST_HELP, TestRows } from '../ui/testrows';
+import { TestRows } from '../ui/testrows';
 import { allTests, autoTests } from '../content/autotests';
 import type { TestCase } from '../emu/grader';
 
@@ -189,7 +189,6 @@ function renderDetail(root: HTMLElement, ex: Exercise) {
         <details class="hints"><summary>Aggiungi i tuoi casi di prova</summary>
           <p class="warn">Facoltativo: vengono eseguiti insieme agli altri a ogni verifica.</p>
           <div id="user-tests" class="user-tests"></div>
-          <details class="help small"><summary>Come compilare i campi</summary>${TEST_HELP}</details>
         </details>
         <details class="hints"><summary>Mostra la soluzione</summary>
           <p class="warn">Prova prima da solo: la soluzione è una delle tante possibili.</p>
