@@ -13,7 +13,7 @@ export const PANELS = [
   { id: 'stack', title: 'Stack' },
 ] as const;
 
-const KEY = 'assembl-easy:layout-v2';
+const KEY = 'assembl-easy:layout-v3';
 
 /** Su schermi stretti (telefono) niente finestre trascinabili: una vista alla volta con schede in basso. */
 const mq = window.matchMedia('(max-width: 760px)');
@@ -44,18 +44,26 @@ function addPanel(id: string, position?: Parameters<DockviewApi['addPanel']>[0][
   });
 }
 
-/** Disposizione di partenza, calcolata sulle dimensioni correnti dell'area. */
+/**
+ * Disposizione di partenza (calcolata sulle dimensioni correnti dell'area):
+ *   codice      | terminale
+ *   registri    | variabili   (con "Cosa è successo" in scheda dietro i registri,
+ *                              Memoria e Stack in scheda dietro le variabili)
+ */
 function defaultLayout() {
   const W = host!.clientWidth;
   const H = host!.clientHeight;
   api!.clear();
   addPanel('editor');
-  addPanel('regs', { referencePanel: 'editor', direction: 'right' }, { w: W * 0.4 });
-  addPanel('log', { referencePanel: 'editor', direction: 'below' }, { h: H * 0.46 });
-  addPanel('screen', { referencePanel: 'log', direction: 'right' }, { w: W * 0.36 });
-  addPanel('vars', { referencePanel: 'regs', direction: 'below' }, { h: H * 0.46 });
+  addPanel('screen', { referencePanel: 'editor', direction: 'right' }, { w: W * 0.46 });
+  // i registri devono vedersi per intero (tabella di 9 righe + flag): altezza minima
+  const regsH = Math.min(Math.max(H * 0.48, 410), Math.max(H - 240, 200));
+  addPanel('regs', { referencePanel: 'editor', direction: 'below' }, { h: regsH });
+  addPanel('vars', { referencePanel: 'screen', direction: 'below' }, { h: H * 0.38 });
+  addPanel('log', { referencePanel: 'regs', direction: 'within' });
   addPanel('mem', { referencePanel: 'vars', direction: 'within' });
   addPanel('stack', { referencePanel: 'vars', direction: 'within' });
+  api!.getPanel('regs')?.api.setActive();
   api!.getPanel('vars')?.api.setActive();
 }
 

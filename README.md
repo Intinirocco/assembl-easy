@@ -14,7 +14,9 @@ moderna, senza installare nulla e con una sintassi compatibile con quella di emu
   assemblato automaticamente mentre scrivi.
 - **Pannelli liberi**: codice, registri, "cosa è successo", terminale, variabili, memoria e stack sono finestre
   che si possono **trascinare** (affiancare, impilare in schede, rendere fluttuanti) e **ridimensionare**; la
-  disposizione viene ricordata nel browser e si ripristina dal menu "Pannelli", che permette anche di
+  disposizione iniziale è: codice e registri a sinistra, terminale e variabili a destra (Memoria e Stack in scheda
+  con le Variabili, "Cosa è successo" in scheda con i Registri); la disposizione viene ricordata nel browser e si
+  ripristina dal menu "Pannelli", che permette anche di
   chiudere e riaprire ogni pannello. Il testo del terminale si ingrandisce con A+/A−.
 - **Telefono**: sotto i 760 px di larghezza l'emulatore mostra una sola vista alla volta con schede in basso
   (Codice, Registri, Variabili, Terminale, …), comandi grandi e un campo di testo per la tastiera del telefono;
