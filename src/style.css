@@ -63,7 +63,7 @@ button.primary { background: var(--accent); color: var(--accent-text); border-co
 button.primary:hover { background: var(--accent-strong); color: var(--accent-text); }
 button.go { background: var(--ok); border-color: var(--ok); color: #fff; }
 button.go:hover { filter: brightness(1.1); color: #fff; }
-select, input[type=search], .page input, .page select, .page textarea, .mem-controls input { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; font-size: 15px; }
+select, input[type=search], .page input, .page select, .page textarea:not(.cm), .mem-controls input { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; font-size: 15px; }
 .mini { padding: 3px 10px; font-size: 13px; border-radius: 6px; }
 .mini.danger { color: var(--err-line); margin-left: 8px; }
 
@@ -389,8 +389,8 @@ button.big { padding: 11px 20px; font-size: 16px; border-radius: 10px; }
 
 .check-grid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 26px; align-items: start; }
 .field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 14px; font-weight: 600; }
-.page textarea, .page input:not([type=checkbox]), .page select { width: 100%; color: var(--text); }
-.page textarea { resize: vertical; }
+.page textarea:not(.cm), .page input:not([type=checkbox]), .page select { width: 100%; color: var(--text); }
+.page textarea:not(.cm) { resize: vertical; }
 .case { border: 1px solid var(--border); border-radius: 10px; margin: 0 0 12px; padding: 10px 14px 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px; background: var(--panel); }
 .case legend { font-size: 13px; color: var(--muted); padding: 0 6px; }
 .case label { display: flex; flex-direction: column; gap: 3px; font-size: 12.5px; color: var(--muted); }

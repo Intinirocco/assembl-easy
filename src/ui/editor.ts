@@ -32,6 +32,8 @@ export class CodeEditor {
     this.gutter = parent.querySelector('.gutter')!;
     this.backdrop = parent.querySelector('.backdrop')!;
     this.textarea = parent.querySelector('textarea')!;
+    // classe usata dal CSS per escludere questo campo dagli stili dei normali campi di testo
+    this.textarea.classList.add('cm');
     if (opts.placeholder) this.textarea.placeholder = opts.placeholder;
 
     this.textarea.addEventListener('scroll', () => this.syncScroll());
