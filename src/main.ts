@@ -45,5 +45,35 @@ function route() {
   }
 }
 
+// ---------- tema chiaro / scuro (predefinito: chiaro, non segue il sistema) ----------
+const THEME_KEY = 'assembl-easy:theme';
+const themeBtn = document.getElementById('theme-toggle')!;
+function applyTheme(t: 'light' | 'dark') {
+  if (t === 'dark') document.documentElement.dataset.theme = 'dark';
+  else delete document.documentElement.dataset.theme;
+  const ti = themeBtn.querySelector('.ti')!;
+  const tl = themeBtn.querySelector('.tl')!;
+  // il pulsante mostra il tema in cui si passerà cliccando
+  ti.textContent = t === 'dark' ? '☀️' : '🌙';
+  tl.textContent = t === 'dark' ? 'Chiaro' : 'Scuro';
+  themeBtn.setAttribute('aria-pressed', String(t === 'dark'));
+}
+let theme: 'light' | 'dark' = 'light';
+try {
+  if (localStorage.getItem(THEME_KEY) === 'dark') theme = 'dark';
+} catch {
+  /* storage non disponibile: resta chiaro */
+}
+applyTheme(theme);
+themeBtn.addEventListener('click', () => {
+  theme = theme === 'dark' ? 'light' : 'dark';
+  applyTheme(theme);
+  try {
+    localStorage.setItem(THEME_KEY, theme);
+  } catch {
+    /* ignora */
+  }
+});
+
 window.addEventListener('hashchange', route);
 route();

@@ -9,6 +9,8 @@ moderna, senza installare nulla e con una sintassi compatibile con quella di emu
 
 ## Funzionalità attuali
 
+- **Tema chiaro / scuro** con interruttore in alto a destra: il tema predefinito è **chiaro** e non segue il
+  sistema operativo; la scelta viene ricordata nel browser.
 - **Editor** con sintassi colorata, numeri di riga, breakpoint (clic sul numero di riga), errori in rosso e
   due marcatori: la **prossima** istruzione (indaco) e l'**ultima eseguita** (verde). Il programma viene
   assemblato automaticamente mentre scrivi.

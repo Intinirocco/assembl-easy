@@ -4,6 +4,12 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Assembl-Easy · Emulatore 8086</title>
+    <script>
+      // tema scelto dall'utente (predefinito: chiaro); applicato subito per evitare lampeggi
+      try {
+        if (localStorage.getItem('assembl-easy:theme') === 'dark') document.documentElement.dataset.theme = 'dark';
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="app">
@@ -15,6 +21,7 @@
         <a data-route="esercizi" href="#/esercizi">Esercizi</a>
         <a data-route="correzione" href="#/correzione">Correzione</a>
         <span id="status" class="status">—</span>
+        <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Cambia tema" title="Cambia tema chiaro / scuro"><span class="ti">🌙</span><span class="tl">Scuro</span></button>
       </nav>
 
       <div id="view-emu" class="view">
