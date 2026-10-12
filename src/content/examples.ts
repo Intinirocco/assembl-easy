@@ -366,7 +366,7 @@ quadrato endp
     category: 'Input/Output',
     summary: 'INT 21h è il servizio del sistema operativo: il numero di funzione si mette in AH.',
     code: prog('', `    mov ah, 1           ; funzione 1: leggi un carattere, in AL
-    int 21h             ; aspetta un tasto (lo mostra a schermo)
+    int 21h             ; aspetta un tasto (lo mostra nel terminale)
 
     mov dl, al          ; il carattere da stampare va in DL
     mov ah, 2           ; funzione 2: stampa il carattere in DL
@@ -411,7 +411,7 @@ quadrato endp
       { code: 'mov buf[bx+2], \'$\'', text: 'DOS termina la riga con il codice 13 (Invio), ma per stamparla serve il `$`: lo si scrive subito dopo l\'ultimo carattere.' },
       { code: 'lea dx, buf+2', text: 'Si stampa a partire dal terzo byte, saltando i due byte di controllo.' },
     ],
-    result: 'Digitando "Anna" a schermo compare: Ciao Anna.',
+    result: 'Digitando "Anna" nel terminale compare: Ciao Anna.',
     input: 'Anna\n',
     output: 'Ciao Anna',
   },

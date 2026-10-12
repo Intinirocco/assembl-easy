@@ -1,7 +1,7 @@
 import { assemble, type Program, type Symbol } from '../emu/assembler';
 import { AF, CF, DF, IF, Machine, OF, PF, SF, TF, ZF, type TraceEntry } from '../emu/cpu';
 import { registerEmulatorLoader } from '../bus';
-import { $, esc } from '../ui/dom';
+import { esc } from '../ui/dom';
 import { CodeEditor } from '../ui/editor';
 import { PANELS, focusPanel, initDock, isOpen, onLayoutChange, resetLayout, togglePanel } from '../ui/dock';
 import template from '../examples/template.asm?raw';
@@ -17,6 +17,14 @@ const FILE_EXAMPLES: [string, string][] = [
   ['scan_num / print_num', ex3],
   ['Accesso diretto alla memoria', ex4],
 ];
+
+// Il gestore di pannelli stacca dal DOM i pannelli in schede non attive: si conservano
+// i riferimenti agli elementi statici all'avvio, così restano utilizzabili anche staccati.
+const staticEls = new Map<string, HTMLElement>();
+document.querySelectorAll<HTMLElement>('#view-emu [id]').forEach((el) => staticEls.set(el.id, el));
+function $<T extends HTMLElement = HTMLElement>(id: string): T {
+  return (staticEls.get(id) ?? document.getElementById(id)) as T;
+}
 
 const editor = new CodeEditor($('editor-host'), { breakpoints: true });
 const breakpoints = editor.breakpoints;
@@ -185,7 +193,7 @@ function renderRegs() {
     </div>`;
 
   const f = m ? m.flags : 2;
-  $('flags').innerHTML = FLAG_INFO.map(([n, bit, info]) => {
+  ($('regs').querySelector('#flags') as HTMLElement).innerHTML = FLAG_INFO.map(([n, bit, info]) => {
     const on = (f & bit) !== 0;
     const was = (prevFlags & bit) !== 0;
     return `<span class="flag${on ? ' on' : ''}${m && on !== was ? ' chg' : ''}" title="${esc(info)}">${n}<i>${on ? 1 : 0}</i></span>`;
@@ -519,7 +527,7 @@ function effectChips(t: TraceEntry): string {
     chips.push(`<span class="fx fx-mem"><b>${name ? esc(name) : 'memoria'}</b> <span class="muted">${fmtAddr(m.addr)}</span> ${from} → <strong>${to}</strong></span>`);
   }
   if (t.out) {
-    const txt = t.out === '\u0000clear' ? 'schermo pulito' : `stampa "${t.out.replace(/\r\n/g, '⏎').replace(/\r/g, '⏎').replace(/\n/g, '↵')}"`;
+    const txt = t.out === '\u0000clear' ? 'terminale pulito' : `stampa "${t.out.replace(/\r\n/g, '⏎').replace(/\r/g, '⏎').replace(/\n/g, '↵')}"`;
     chips.push(`<span class="fx fx-out">${esc(txt)}</span>`);
   }
   if (t.jump !== null) chips.push(`<span class="fx fx-jump">salta a <strong>${hex(t.jump, 4)}</strong></span>`);
@@ -544,7 +552,7 @@ function renderLog() {
   } else if (m.status === 'halted') {
     html += `<div class="ls-msg ok"><b>Programma terminato</b> dopo ${m.steps} istruzioni.</div>`;
   } else if (m.status === 'waiting') {
-    html += `<div class="ls-msg wait"><b>In attesa di input:</b> scrivi nello schermo qui accanto.</div>`;
+    html += `<div class="ls-msg wait"><b>In attesa di input:</b> scrivi nel terminale qui accanto.</div>`;
   }
   if (last) {
     html += `<div class="ls-title">Ultima istruzione eseguita</div>
@@ -579,12 +587,12 @@ for (const id of ['last-step', 'log']) {
   });
 }
 
-// ---------- schermo e stato ----------
+// ---------- terminale e stato ----------
 function renderConsole() {
   consoleEl.textContent = machine ? machine.out : '';
   consoleEl.scrollTop = consoleEl.scrollHeight;
   const waiting = machine?.status === 'waiting';
-  hint.textContent = waiting ? '← in attesa di input: scrivi qui' : '';
+  hint.textContent = waiting ? 'In attesa di input: scrivi qui' : '';
   consoleEl.classList.toggle('waiting', waiting);
   if (waiting) focusPanel('screen');
 }
@@ -727,7 +735,7 @@ messages.addEventListener('click', (e) => {
   editor.selectLine(Number(el.dataset.line));
 });
 
-// input da tastiera nello "schermo"
+// input da tastiera nel terminale
 consoleEl.addEventListener('keydown', (e) => {
   if (!machine) return;
   let k: string | null = null;
@@ -812,7 +820,7 @@ setupScreenFont();
 renderState();
 compile();
 
-// ---------- schermo: dimensione del testo ----------
+// ---------- terminale: dimensione del testo ----------
 function setupScreenFont() {
   const KEY = 'assembl-easy:console-size';
   let size = 14;

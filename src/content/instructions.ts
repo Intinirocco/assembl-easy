@@ -403,7 +403,7 @@ const directives: Instruction[] = [
         ['SCAN_NUM', 'procedura (DEFINE_SCAN_NUM)', 'Legge un numero intero in CX'],
         ['PRINT_NUM', 'procedura (DEFINE_PRINT_NUM)', 'Stampa AX come numero con segno'],
         ['PRINT_NUM_UNS', 'procedura (DEFINE_PRINT_NUM_UNS)', 'Stampa AX come numero senza segno'],
-        ['CLEAR_SCREEN', 'procedura (DEFINE_CLEAR_SCREEN)', 'Pulisce lo schermo'],
+        ['CLEAR_SCREEN', 'procedura (DEFINE_CLEAR_SCREEN)', 'Pulisce il terminale'],
       ],
     },
   },

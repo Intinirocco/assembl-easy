@@ -97,7 +97,7 @@ export function renderCheck(root: HTMLElement) {
           <details class="help small"><summary>Come compilare i campi</summary>
             <ul>
               <li><b>Input</b>: i tasti digitati; usa <code>\\n</code> per Invio (es. <code>12\\n30\\n</code>).</li>
-              <li><b>Output atteso</b>: testi che devono comparire a schermo, separati da <code>|</code>.</li>
+              <li><b>Output atteso</b>: testi che devono comparire nel terminale, separati da <code>|</code>.</li>
               <li><b>Variabili finali</b>: <code>risultato=42, v=[1 2 3], msg='ciao'</code> (valori in decimale, <code>0x…</code> o <code>…h</code>).</li>
               <li><b>Registri finali</b>: <code>cx=52, dl=65</code>. Attenzione: <code>ax</code> è sovrascritto dall'uscita al DOS (<code>mov ax, 4c00h</code>).</li>
               <li><b>Valori iniziali</b>: <code>n1=10, n2=20</code> imposta variabili del segmento dati prima di partire.</li>

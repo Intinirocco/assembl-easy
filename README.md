@@ -12,10 +12,10 @@ moderna, senza installare nulla e con una sintassi compatibile con quella di emu
 - **Editor** con sintassi colorata, numeri di riga, breakpoint (clic sul numero di riga), errori in rosso e
   due marcatori: la **prossima** istruzione (indaco) e l'**ultima eseguita** (verde). Il programma viene
   assemblato automaticamente mentre scrivi.
-- **Pannelli liberi**: codice, registri, "cosa è successo", schermo, variabili, memoria e stack sono finestre
+- **Pannelli liberi**: codice, registri, "cosa è successo", terminale, variabili, memoria e stack sono finestre
   che si possono **trascinare** (affiancare, impilare in schede, rendere fluttuanti) e **ridimensionare**; la
   disposizione viene ricordata nel browser e si ripristina dal menu "Pannelli", che permette anche di
-  chiudere e riaprire ogni pannello. Il testo dello schermo si ingrandisce con A+/A−.
+  chiudere e riaprire ogni pannello. Il testo del terminale si ingrandisce con A+/A−.
 - **Esecuzione**: Compila, Run, Single step, Step back (torna indietro di un'istruzione), Stop, Reset,
   velocità regolabile.
 - **Registri** in due tabelle: AX/BX/CX/DX con parte alta (H) e bassa (L), poi SI, DI, BP, SP, IP e segmenti; le
@@ -27,7 +27,7 @@ moderna, senza installare nulla e con una sintassi compatibile con quella di emu
 - **Variabili**: tutte le variabili dichiarate con tipo, indirizzo e valore corrente (numeri, array, stringhe),
   in decimale o esadecimale; clic su una variabile per vederla in memoria.
 - **Memoria** esadecimale con vista ASCII (le variabili sono evidenziate) e **Stack** con la cima indicata da SP.
-- **Schermo** console con input da tastiera.
+- **Terminale** con input da tastiera.
 - **Errori di assemblaggio** evidenziati con una striscia rossa sulla riga e con un elenco cliccabile
   (istruzione sconosciuta, operandi di dimensione diversa, etichetta non definita, virgola mancante in `DB`, ecc.).
 - Apri/salva file `.asm` e alcuni programmi di esempio.

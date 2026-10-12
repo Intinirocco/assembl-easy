@@ -7,13 +7,13 @@ export const PANELS = [
   { id: 'editor', title: 'Codice sorgente' },
   { id: 'regs', title: 'Registri' },
   { id: 'log', title: 'Cosa è successo' },
-  { id: 'screen', title: 'Schermo' },
+  { id: 'screen', title: 'Terminale' },
   { id: 'vars', title: 'Variabili' },
   { id: 'mem', title: 'Memoria' },
   { id: 'stack', title: 'Stack' },
 ] as const;
 
-const KEY = 'assembl-easy:layout-v1';
+const KEY = 'assembl-easy:layout-v2';
 const theme: DockviewTheme = { name: 'assembl', className: 'dockview-theme-assembl', gap: 10 };
 
 let api: DockviewApi | null = null;
