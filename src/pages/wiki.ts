@@ -17,60 +17,52 @@ function flagsHtml(text: string): string {
 }
 
 function detail(i: Instruction): string {
-  const related = INSTRUCTIONS.filter((x) => x.category === i.category && x.id !== i.id).slice(0, 6);
+  const related = INSTRUCTIONS.filter((x) => x.category === i.category && x.id !== i.id).slice(0, 8);
+
+  const left: string[] = [];
+  const right: string[] = [];
+
+  left.push(`<section class="wd-card"><h3>Sintassi</h3><pre class="code">${i.syntax.map((s) => esc(s)).join('\n')}</pre></section>`);
+  if (i.operands.length) {
+    left.push(`<section class="wd-card">
+      <h3>Operandi ammessi</h3>
+      <table class="optbl"><tbody>${i.operands
+        .map((o) => `<tr><td><code>${esc(o.form)}</code></td><td>${o.note ? inline(o.note) : ''}</td></tr>`)
+        .join('')}</tbody></table>
+    </section>`);
+  }
+  if (i.table) {
+    left.push(`<section class="wd-card"><h3>Tabella</h3><div class="tscroll"><table class="tbl"><thead><tr>${i.table.head
+      .map((h) => `<th>${esc(h)}</th>`)
+      .join('')}</tr></thead><tbody>${i.table.rows
+      .map((r) => `<tr>${r.map((c) => `<td>${inline(c)}</td>`).join('')}</tr>`)
+      .join('')}</tbody></table></div></section>`);
+  }
+
+  right.push(`<section class="wd-card"><h3>Flag modificati</h3>${flagsHtml(i.flags)}</section>`);
+  right.push(`<section class="wd-card">
+      <div class="wd-row"><h3>Esempio</h3><button class="mini" id="w-copy">Copia</button></div>
+      <pre class="code">${highlight(i.example)}</pre>
+    </section>`);
+  if (i.notes?.length) {
+    right.push(
+      `<section class="wd-card wd-notes"><h3>Da ricordare</h3><ul>${i.notes.map((n) => `<li>${inline(n)}</li>`).join('')}</ul></section>`,
+    );
+  }
+
   return `<article class="wdetail">
     <header class="wd-head">
       <span class="tag">${esc(i.category)}</span>
       <h1>${esc(i.name)}</h1>
       <p class="lead">${inline(i.description)}</p>
     </header>
-
-    <div class="wd-grid">
-      <section class="wd-card">
-        <h3>Sintassi</h3>
-        <pre class="code">${i.syntax.map((s) => esc(s)).join('\n')}</pre>
-      </section>
-      <section class="wd-card">
-        <h3>Flag modificati</h3>
-        ${flagsHtml(i.flags)}
-      </section>
+    <div class="wd-cols">
+      <div class="wd-col">${left.join('')}</div>
+      <div class="wd-col">${right.join('')}</div>
     </div>
-
-    ${
-      i.operands.length
-        ? `<section class="wd-card">
-            <h3>Operandi ammessi</h3>
-            <table class="optbl"><tbody>${i.operands
-              .map((o) => `<tr><td><code>${esc(o.form)}</code></td><td>${o.note ? inline(o.note) : ''}</td></tr>`)
-              .join('')}</tbody></table>
-          </section>`
-        : ''
-    }
-
-    ${
-      i.table
-        ? `<section class="wd-card"><h3>Tabella</h3><div class="tscroll"><table class="tbl"><thead><tr>${i.table.head
-            .map((h) => `<th>${esc(h)}</th>`)
-            .join('')}</tr></thead><tbody>${i.table.rows
-            .map((r) => `<tr>${r.map((c) => `<td>${inline(c)}</td>`).join('')}</tr>`)
-            .join('')}</tbody></table></div></section>`
-        : ''
-    }
-
-    <section class="wd-card">
-      <div class="wd-row"><h3>Esempio</h3><button class="mini" id="w-copy">Copia</button></div>
-      <pre class="code">${highlight(i.example)}</pre>
-    </section>
-
-    ${
-      i.notes?.length
-        ? `<section class="wd-card wd-notes"><h3>Da ricordare</h3><ul>${i.notes.map((n) => `<li>${inline(n)}</li>`).join('')}</ul></section>`
-        : ''
-    }
-
     ${
       related.length
-        ? `<section class="wd-related"><h3>Stessa categoria</h3><div class="chips">${related
+        ? `<section class="wd-related"><h3>Altre istruzioni della categoria</h3><div class="chips">${related
             .map((r) => `<a class="chip" href="#/wiki/${r.id}">${esc(r.name)}</a>`)
             .join('')}</div></section>`
         : ''

@@ -42,7 +42,8 @@ moderna, senza installare nulla e con una sintassi compatibile con quella di emu
   codice con righe numerate, spiegazioni numerate agganciate alle righe di codice (al passaggio del mouse la riga si
   illumina), risultato, guida "Provalo tu", pulsante "Apri nell'emulatore" e navigazione precedente/successivo. Ogni esempio è verificato da un test automatico.
 - **Wiki delle istruzioni** (`#/wiki`): a due colonne, con l'elenco per categoria (ricercabile) a sinistra e la scheda
-  dell'istruzione a destra: sintassi, flag modificati, operandi ammessi, esempio e note. Link diretti `#/wiki/mov`.
+  dell'istruzione a destra: sintassi, flag modificati, operandi ammessi, esempio e note. Link diretti `#/wiki/mov`. Le pagine sfruttano
+  tutta la larghezza dello schermo (a più colonne sui monitor grandi).
 - **Esercizi** (`#/esercizi`): 19 esercizi con barra di avanzamento, filtri per argomenti (selezione multipla,
   intersezione), difficoltà e stato, con consegna, suggerimenti, soluzione nascosta e
   **correzione automatica**: il programma viene eseguito su più casi di prova (valori iniziali, input da tastiera,

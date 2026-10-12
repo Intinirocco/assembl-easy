@@ -18,7 +18,7 @@ const selectedLevels = new Set<number>();
 let statusFilter: 'all' | 'todo' | 'done' = 'all';
 
 function plain(text: string): string {
-  return text.replace(/`/g, '');
+  return text.replace(/`/g, '').replace(/\*\*/g, '');
 }
 
 function matches(e: Exercise, completed: Set<string>): boolean {
@@ -154,24 +154,44 @@ function renderDetail(root: HTMLElement, ex: Exercise) {
   const draft = store<string | null>(`draft:${ex.id}`, null);
   const idx = EXERCISES.indexOf(ex);
   const next = EXERCISES[idx + 1];
+  const prev = EXERCISES[idx - 1];
+  const isDone = done.get().includes(ex.id);
+
+  const placeholder = () => `<div class="rep rep-idle">
+      <div class="rep-title">Casi di prova (${ex.tests.length + (ex.requires?.length ? 1 : 0)})</div>
+      <ul class="rep-tests idle">
+        ${ex.requires?.length ? `<li><span class="mark">○</span> <b>Struttura del programma</b> <span class="muted small">usa ${ex.requires.map((r) => r.toUpperCase()).join(', ')}</span></li>` : ''}
+        ${ex.tests.map((t) => `<li><span class="mark">○</span> <b>${esc(t.name)}</b></li>`).join('')}
+      </ul>
+      <p class="rep-hint">Premi <b>Verifica</b> per eseguire il programma su tutti i casi.</p>
+    </div>`;
+
   root.innerHTML = `
-    <div class="crumbs"><a href="#/esercizi">← Esercizi</a> · ${esc(ex.category)} · ${levelDots(ex.level)} ${LEVELS[ex.level]}</div>
-    <div class="ex-detail">
-      <section class="ex-text">
+    <div class="crumbs"><a class="back" href="#/esercizi">← Tutti gli esercizi</a></div>
+    <div class="ex-page">
+      <section class="ex-info">
+        <div class="ex-meta-row">
+          <span class="ex-cat">${esc(ex.category)}</span>
+          <span class="level-pill">${levelDots(ex.level)} ${LEVELS[ex.level]}</span>
+          ${isDone ? '<span class="done-pill">✓ Completato</span>' : ''}
+        </div>
         <h1>${esc(ex.title)}</h1>
         <div class="consegna">${inline(ex.text)}</div>
-        <h4>Casi di prova</h4>
-        <ul class="cases">${ex.tests.map((t) => `<li>${esc(t.name)}</li>`).join('')}</ul>
-        <details class="hints"><summary>Suggerimenti</summary>
+        <details class="hints"><summary>Suggerimenti <span class="muted">(${ex.hints.length})</span></summary>
           <ol>${ex.hints.map((h) => `<li>${inline(h)}</li>`).join('')}</ol>
         </details>
         <details class="hints"><summary>Mostra la soluzione</summary>
           <p class="warn">Prova prima da solo: la soluzione è una delle tante possibili.</p>
           <pre class="code" id="sol"></pre>
         </details>
+        <nav class="ex-nav">
+          ${prev ? `<a href="#/esercizi/${prev.id}">← ${esc(prev.title)}</a>` : '<span></span>'}
+          ${next ? `<a href="#/esercizi/${next.id}">${esc(next.title)} →</a>` : '<span></span>'}
+        </nav>
       </section>
+
       <section class="ex-work">
-        <div class="pane">
+        <div class="pane ex-editor-pane">
           <div class="pane-title">Il tuo codice
             <span class="spacer"></span>
             <button id="ex-reset" class="mini">Ripristina</button>
@@ -179,12 +199,12 @@ function renderDetail(root: HTMLElement, ex: Exercise) {
           <div id="ex-editor" class="editor tall"></div>
         </div>
         <div class="actions">
-          <button id="ex-check" class="primary">Verifica</button>
-          <button id="ex-open">Apri nell'emulatore</button>
-          ${next ? `<a class="btn-link" href="#/esercizi/${next.id}">Prossimo esercizio →</a>` : ''}
+          <button id="ex-check" class="primary big">✓ Verifica</button>
+          <button id="ex-open" class="big">Apri nell'emulatore</button>
         </div>
-        <div id="ex-report"></div>
       </section>
+
+      <aside class="ex-results"><div id="ex-report">${placeholder()}</div></aside>
     </div>`;
 
   (root.querySelector('#sol') as HTMLElement).textContent = solutionCode(ex);
@@ -214,6 +234,8 @@ function renderDetail(root: HTMLElement, ex: Exercise) {
       const list = new Set(done.get());
       list.add(ex.id);
       done.set([...list]);
+      const meta = root.querySelector('.ex-meta-row');
+      if (meta && !meta.querySelector('.done-pill')) meta.insertAdjacentHTML('beforeend', '<span class="done-pill">✓ Completato</span>');
     }
   });
   root.querySelector('#ex-open')!.addEventListener('click', () => openInEmulator(editor.value));
@@ -223,6 +245,6 @@ function renderDetail(root: HTMLElement, ex: Exercise) {
     draft.set(null);
     editor.errors = new Map();
     editor.render();
-    report.innerHTML = '';
+    report.innerHTML = placeholder();
   });
 }

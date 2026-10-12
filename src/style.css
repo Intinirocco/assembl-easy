@@ -310,7 +310,8 @@ body.is-emu .status { display: block; }
 .mc { margin-left: 10px; color: var(--muted); letter-spacing: .08em; }
 
 /* ============ pagine (esempi, wiki, esercizi, correzione) ============ */
-.page { overflow: auto; padding: 28px clamp(16px, 4vw, 56px) 72px; max-width: 1320px; width: 100%; margin: 0 auto; }
+.page { overflow: auto; padding: 28px clamp(16px, 4vw, 72px) 72px; max-width: 2000px; width: 100%; margin: 0 auto; }
+@media (min-width: 1600px) { .page { font-size: 16.5px; } .page h1 { font-size: 32px; } }
 .page h1 { margin: 0 0 8px; font-size: 28px; }
 .page-head p { margin: 0 0 20px; color: var(--muted); max-width: 70ch; }
 .muted { color: var(--muted); }
@@ -425,7 +426,31 @@ button.big { padding: 11px 20px; font-size: 16px; border-radius: 10px; }
 .pager-cards a span { font-size: 12.5px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
 .pager-cards a.next { text-align: right; }
 
-.ex-detail { display: grid; grid-template-columns: minmax(280px, 0.8fr) minmax(0, 1.4fr); gap: 26px; align-items: start; }
+.ex-page { display: grid; grid-template-columns: minmax(300px, 380px) minmax(0, 1fr) minmax(300px, 400px); gap: 24px; align-items: start; }
+.ex-info { position: sticky; top: 12px; max-height: calc(100vh - 90px); overflow: auto; padding-right: 4px; }
+.ex-info h1 { font-size: 28px; margin: 6px 0 14px; letter-spacing: -.01em; }
+.ex-meta-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.level-pill { font-size: 13px; padding: 2px 10px; border-radius: 999px; border: 1px solid var(--border); background: var(--panel); color: var(--muted); }
+.done-pill { font-size: 13px; padding: 2px 10px; border-radius: 999px; background: var(--ok); color: #fff; font-weight: 600; }
+.ex-work { min-width: 0; }
+.ex-editor-pane { box-shadow: 0 1px 3px rgba(20, 24, 40, .06); }
+.ex-work .editor.tall { height: calc(100vh - 250px); min-height: 460px; }
+.ex-results { position: sticky; top: 12px; max-height: calc(100vh - 90px); overflow: auto; }
+.ex-results .rep { margin-top: 0; }
+.rep-idle .rep-title { color: var(--text); }
+.rep-tests.idle .mark { color: var(--muted); }
+.ex-nav { display: flex; justify-content: space-between; gap: 10px; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border); font-size: 14px; }
+.ex-nav a { color: var(--accent-strong); text-decoration: none; }
+.ex-nav a:hover { text-decoration: underline; }
+@media (max-width: 1500px) {
+  .ex-page { grid-template-columns: minmax(280px, 360px) minmax(0, 1fr); }
+  .ex-results { position: static; grid-column: 2; max-height: none; }
+}
+@media (max-width: 900px) {
+  .ex-page { grid-template-columns: minmax(0, 1fr); }
+  .ex-info, .ex-results { position: static; max-height: none; grid-column: 1; }
+  .ex-work .editor.tall { height: 420px; }
+}
 .consegna { padding: 14px 16px; background: var(--panel); border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: 10px; }
 .cases { margin: 4px 0; padding-left: 18px; color: var(--muted); }
 .hints { margin: 12px 0; border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; background: var(--panel); }
@@ -464,7 +489,7 @@ button.big { padding: 11px 20px; font-size: 16px; border-radius: 10px; }
 .browse-head { margin-bottom: 18px; }
 .browse-head h1 { margin: 0 0 6px; }
 .browse-head p { margin: 0; color: var(--muted); max-width: 72ch; }
-.browse { display: grid; grid-template-columns: 270px minmax(0, 1fr); gap: 28px; align-items: start; }
+.browse { display: grid; grid-template-columns: minmax(250px, 300px) minmax(0, 1fr); gap: 32px; align-items: start; }
 .browse-side { position: sticky; top: 12px; display: flex; flex-direction: column; gap: 10px; max-height: calc(100vh - 100px); overflow: auto; padding-right: 4px; }
 .browse-side input[type=search] { width: 100%; }
 .bs-title { margin-top: 8px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); }
@@ -485,7 +510,7 @@ button.big { padding: 11px 20px; font-size: 16px; border-radius: 10px; }
 .xg-head h2 { margin: 0; font-size: 20px; }
 .xg-count { font-size: 13px; color: var(--muted); background: var(--panel); border: 1px solid var(--border); border-radius: 999px; padding: 0 9px; }
 .xg-desc { margin: 4px 0 14px; color: var(--muted); }
-.xgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+.xgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 18px; }
 .xcard { display: flex; flex-direction: column; gap: 8px; padding: 16px 18px; background: var(--panel); border: 1px solid var(--border); border-radius: 14px; text-decoration: none; color: var(--text); transition: border-color .15s, box-shadow .15s, transform .15s; }
 .xcard:hover { border-color: var(--accent); box-shadow: 0 8px 24px rgba(79, 70, 229, .12); transform: translateY(-1px); }
 .xc-top { display: flex; justify-content: space-between; align-items: center; }
@@ -510,7 +535,7 @@ button.big { padding: 11px 20px; font-size: 16px; border-radius: 10px; }
 .btn-link-block { display: block; margin-top: 12px; padding: 9px 12px; border-radius: 10px; background: var(--accent); color: var(--accent-text); text-decoration: none; font-weight: 600; font-size: 14px; }
 .btn-link-block:hover { background: var(--accent-strong); }
 .pg-all { margin: 10px 0 0; color: var(--ok); font-weight: 600; }
-.xlist { display: flex; flex-direction: column; gap: 12px; margin-top: 8px; }
+.xlist { display: grid; grid-template-columns: repeat(auto-fill, minmax(560px, 1fr)); gap: 14px; margin-top: 8px; }
 .xrow { display: flex; align-items: center; gap: 16px; padding: 16px 20px; background: var(--panel); border: 1px solid var(--border); border-radius: 14px; text-decoration: none; color: var(--text); transition: border-color .15s, box-shadow .15s; }
 .xrow:hover { border-color: var(--accent); box-shadow: 0 6px 20px rgba(79, 70, 229, .1); }
 .xr-state { flex: none; width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--border); display: inline-flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; }
@@ -531,7 +556,10 @@ button.big { padding: 11px 20px; font-size: 16px; border-radius: 10px; }
 .wn-item:hover { background: var(--panel); }
 .wn-item.on { background: var(--accent); color: var(--accent-text); }
 .empty-note { padding: 12px 8px; color: var(--muted); }
-.wdetail { max-width: 920px; display: flex; flex-direction: column; gap: 16px; }
+.wdetail { display: flex; flex-direction: column; gap: 18px; }
+.wd-cols { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+.wd-col { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+@media (max-width: 1100px) { .wd-cols { grid-template-columns: minmax(0, 1fr); } }
 .wd-head h1 { margin: 6px 0 6px; font-size: 34px; letter-spacing: -.01em; }
 .wd-head .lead { margin: 0; font-size: 17px; color: var(--muted); max-width: 68ch; }
 .wd-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
@@ -552,7 +580,8 @@ button.big { padding: 11px 20px; font-size: 16px; border-radius: 10px; }
 .wf-text { margin: 0; font-size: 14.5px; }
 .tscroll { overflow-x: auto; }
 .wd-related .chips { margin-top: 4px; }
-.wd-related .chip { text-decoration: none; color: var(--text); }
+a.chip { display: inline-block; border: 1px solid var(--border); background: var(--panel); border-radius: 999px; padding: 6px 14px; text-decoration: none; color: var(--text); font-size: 14px; font-weight: 500; }
+a.chip:hover { border-color: var(--accent); color: var(--accent-strong); }
 
 /* ---------- adattamento a schermi stretti ---------- */
 @media (max-width: 1100px) {
@@ -571,6 +600,7 @@ button.big { padding: 11px 20px; font-size: 16px; border-radius: 10px; }
   .wiki-nav { border: 1px solid var(--border); border-radius: 12px; background: var(--panel); padding: 6px 12px; }
   .wn-list { max-height: 50vh; }
   .xr-go { display: none; }
+  .xlist { grid-template-columns: minmax(0, 1fr); }
   .ex-detail, .check-grid, .ex-layout { grid-template-columns: 1fr; }
   .ex-side { position: static; }
   .ex-hero h1 { font-size: 26px; }
