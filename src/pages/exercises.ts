@@ -5,6 +5,7 @@ import { esc, inline, store } from '../ui/dom';
 import { CodeEditor } from '../ui/editor';
 import { renderReport } from '../ui/report';
 import { TestRows } from '../ui/testrows';
+import { localizeFault } from '../emu/localize';
 import { allTests, autoTests } from '../content/autotests';
 import type { TestCase } from '../emu/grader';
 
@@ -245,10 +246,16 @@ function renderDetail(root: HTMLElement, ex: Exercise) {
       report.innerHTML = `<div class="rep rep-bad"><div class="rep-title">I tuoi casi di prova non sono validi</div><p>${esc((err as Error).message)}</p></div>`;
       return;
     }
-    const r = gradeProgram(editor.value, [...sets.base, ...sets.auto, ...user], { requires: ex.requires });
-    editor.errors = r.errorLines;
+    const all = [...sets.base, ...sets.auto, ...user];
+    const r = gradeProgram(editor.value, all, { requires: ex.requires });
+    // errore logico: si cerca la riga colpevole e la si evidenzia con una barra rossa
+    const suspects = localizeFault(editor.value, all, r, { requires: ex.requires });
+    editor.errors = new Map(r.errorLines);
+    for (const s of suspects) editor.errors.set(s.line, s.message);
     editor.render();
-    report.innerHTML = renderReport(r);
+    const first = [...editor.errors.keys()].sort((a, b) => a - b)[0];
+    if (first) editor.scrollToLine(first);
+    report.innerHTML = renderReport(r, suspects);
     if (r.assemblyErrors.length === 0 && r.total > 0 && r.passed === r.total) {
       const list = new Set(done.get());
       list.add(ex.id);

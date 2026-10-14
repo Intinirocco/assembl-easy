@@ -107,7 +107,10 @@ function renderEditor() {
   editor.current = live ? m!.currentLine : null;
   const last = m && m.trace.length ? m.trace[m.trace.length - 1] : null;
   editor.last = last && last.line ? last.line : null;
-  editor.errors = errorLines;
+  // errori di assemblaggio + riga dove si è fermato il programma per un errore a runtime
+  const errs = new Map(errorLines);
+  if (m && m.status === 'error' && m.lastLine) errs.set(m.lastLine, m.error ?? 'Errore di esecuzione');
+  editor.errors = errs;
   editor.render();
 }
 

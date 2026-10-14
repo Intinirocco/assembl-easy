@@ -156,6 +156,7 @@ body.is-emu .status { display: block; }
 .gl:hover { color: var(--text); }
 .gl.bp::before { content: ''; position: absolute; left: 10px; top: 5px; width: 12px; height: 12px; border-radius: 50%; background: var(--err-line); }
 .gl.err { color: var(--err-line); font-weight: 700; }
+.gl.err::after { content: '✕'; position: absolute; left: 7px; top: 0; font-size: 11px; color: var(--err-line); }
 .gl.last { color: var(--last-bar); font-weight: 700; }
 .gl.cur { color: var(--cur-bar); font-weight: 700; }
 .gl.cur::after { content: '▶'; position: absolute; left: 6px; top: 0; font-size: 11px; color: var(--cur-bar); }
@@ -164,7 +165,7 @@ body.is-emu .status { display: block; }
 .bl.last { background: var(--last-bg); box-shadow: inset 4px 0 0 var(--last-bar); }
 .bl.cur { background: var(--cur-bg); box-shadow: inset 4px 0 0 var(--cur-bar); }
 .bl.bpl:not(.cur) { box-shadow: inset 4px 0 0 var(--err-line); }
-.bl.err { background: var(--err); border-bottom: 2px solid var(--err-line); }
+.bl.err { background: var(--err); box-shadow: inset 6px 0 0 var(--err-line); border-bottom: 1px solid var(--err-line); }
 .editor textarea { position: relative; flex: 1; border: 0; outline: 0; resize: none; background: transparent; color: transparent; caret-color: var(--text); font: inherit; padding: 8px 14px; margin: 0; white-space: pre; overflow: auto; tab-size: 4; }
 .editor textarea::selection { background: rgba(79, 70, 229, .28); color: transparent; }
 .editor textarea::placeholder { color: var(--muted); }
@@ -802,3 +803,15 @@ body:not(.is-emu) .theme-toggle { margin-left: auto; }
   .theme-toggle { position: sticky; right: 6px; margin-left: auto; padding: 7px 10px; background: var(--nav); }
   .theme-toggle .tl { display: none; }
 }
+
+/* righe sbagliate / sospette */
+.suspects { margin: 10px 0 4px; padding: 12px 14px; border-radius: 10px; background: var(--err); border: 1px solid var(--err-line); }
+.sus-title { display: flex; align-items: center; gap: 8px; font-weight: 700; color: var(--err-line); margin-bottom: 8px; }
+.sus-bar { display: inline-block; width: 6px; height: 18px; border-radius: 2px; background: var(--err-line); }
+.suspects ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.sus-line { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+.sus-line a { font-weight: 700; color: var(--err-line); }
+.sus-line code { background: var(--panel); border: 1px solid var(--border); word-break: break-word; }
+.sus-msg { font-size: 14px; margin-top: 2px; }
+.sus-hint { margin-top: 6px; font-size: 14px; }
+.sus-hint summary { cursor: pointer; color: var(--accent-strong); font-weight: 600; }

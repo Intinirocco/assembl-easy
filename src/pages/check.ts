@@ -9,6 +9,7 @@ import { esc, store } from '../ui/dom';
 import { CodeEditor } from '../ui/editor';
 import { renderReport } from '../ui/report';
 import { TestRows } from '../ui/testrows';
+import { localizeFault } from '../emu/localize';
 
 const saved = store<{ consegna: string; code: string; exercise: string }>('check2', {
   consegna: '',
@@ -297,9 +298,13 @@ export function renderCheck(root: HTMLElement) {
     const t = ex ? allTests(ex) : { base: [] as TestCase[], auto: [] as TestCase[] };
     const tests: TestCase[] = [...t.base, ...t.auto, ...user];
     const r = gradeProgram(code, tests, { requires: ex?.requires });
-    editor.errors = r.errorLines;
+    const suspects = localizeFault(code, tests, r, { requires: ex?.requires });
+    editor.errors = new Map(r.errorLines);
+    for (const s of suspects) editor.errors.set(s.line, s.message);
     editor.render();
-    report.innerHTML = head + analysisCard(analysis) + renderReport(r);
+    const first = [...editor.errors.keys()].sort((a, b) => a - b)[0];
+    if (first) editor.scrollToLine(first);
+    report.innerHTML = head + analysisCard(analysis) + renderReport(r, suspects);
     persist();
   }
 

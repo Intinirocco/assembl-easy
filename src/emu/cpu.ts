@@ -89,9 +89,30 @@ export class Machine {
   }
 
   // ---------- ciclo di vita ----------
+  // intervallo di memoria modificato: permette di azzerare solo quello tra un'esecuzione e l'altra
+  private dirtyLo = Infinity;
+  private dirtyHi = -1;
+
+  private markDirty(lo: number, hi: number) {
+    if (lo < this.dirtyLo) this.dirtyLo = lo;
+    if (hi > this.dirtyHi) this.dirtyHi = hi;
+  }
+
+  /** Scrive un byte nella memoria fuori dall'esecuzione (valori iniziali dei test). */
+  poke(addr: number, v: number) {
+    const a = addr & 0xfffff;
+    this.mem[a] = v & 0xff;
+    this.markDirty(a, a);
+  }
+
   reset() {
-    this.mem.fill(0);
-    for (const s of this.program.segments) this.mem.set(s.bytes, s.base * 16);
+    if (this.dirtyHi >= this.dirtyLo) this.mem.fill(0, this.dirtyLo, this.dirtyHi + 1);
+    this.dirtyLo = Infinity;
+    this.dirtyHi = -1;
+    for (const s of this.program.segments) {
+      this.mem.set(s.bytes, s.base * 16);
+      this.markDirty(s.base * 16, s.base * 16 + s.bytes.length - 1);
+    }
     this.regs.fill(0);
     this.segs.fill(0);
     const p = this.program;
@@ -146,6 +167,8 @@ export class Machine {
   }
   wr8(addr: number, v: number) {
     const a = addr & 0xfffff;
+    if (a < this.dirtyLo) this.dirtyLo = a;
+    if (a > this.dirtyHi) this.dirtyHi = a;
     this.writes.push([a, this.mem[a]]);
     this.mem[a] = v & 0xff;
   }

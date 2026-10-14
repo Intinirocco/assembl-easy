@@ -1,4 +1,5 @@
 import type { GradeReport, TestResult } from '../emu/grader';
+import type { Suspect } from '../emu/localize';
 import { esc } from './dom';
 
 const GROUP_TITLE: Record<string, string> = {
@@ -51,7 +52,33 @@ function groupHtml(key: string, items: TestResult[]): string {
   return html + '</section>';
 }
 
-export function renderReport(r: GradeReport): string {
+function suspectsHtml(list: Suspect[]): string {
+  if (!list.length) return '';
+  const title =
+    list[0].kind === 'fix' || list[0].kind === 'partial'
+      ? list.length > 1 ? 'Righe sospette' : 'Riga sbagliata'
+      : 'Dove guardare';
+  return `<section class="suspects">
+    <div class="sus-title"><span class="sus-bar"></span>${title}</div>
+    <ul>${list
+      .map(
+        (s) => `<li>
+          <div class="sus-line"><a href="#" data-goto="${s.line}">Riga ${s.line}</a> <code>${esc(s.text)}</code></div>
+          <div class="sus-msg">${esc(s.message)}</div>
+          ${
+            s.suggestions.length
+              ? `<details class="sus-hint"><summary>Mostra un suggerimento</summary>Prova a scrivere ${s.suggestions
+                  .map((x) => `<code>${esc(x)}</code>`)
+                  .join(' oppure ')}</details>`
+              : ''
+          }
+        </li>`,
+      )
+      .join('')}</ul>
+  </section>`;
+}
+
+export function renderReport(r: GradeReport, suspects: Suspect[] = []): string {
   if (r.assemblyErrors.length) {
     return `<div class="rep rep-bad">
       <div class="rep-title">Il programma non si assembla: ${r.assemblyErrors.length} error${r.assemblyErrors.length === 1 ? 'e' : 'i'}</div>
@@ -74,6 +101,7 @@ export function renderReport(r: GradeReport): string {
   return `<div class="rep ${ok ? 'rep-ok' : 'rep-bad'}">
     <div class="rep-title">${ok ? '✓ Tutti i test superati' : `${r.passed} test superati su ${r.total}`}</div>
     <div class="rep-sub">${r.total} casi: ${parts.join(' · ')}</div>
+    ${suspectsHtml(suspects)}
     ${order.map((g) => groupHtml(g, groups.get(g)!)).join('')}
   </div>`;
 }

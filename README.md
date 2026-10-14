@@ -169,6 +169,19 @@ Nella modalità **automatica** (predefinita) non serve scegliere l'esercizio dal
    eseguito con valori limite e casuali per gli ingressi e con sequenze di tasti, e si mostra una tabella *valori →
    variabili modificate, terminale, esito*; si evidenziano in rosso solo errori veri (divisione per zero, ciclo infinito).
 
+### Quale riga è sbagliata? (`src/emu/localize.ts`)
+
+Quando i test falliscono la riga colpevole viene evidenziata con una **barra rossa** (con ✕ sul numero di riga):
+
+- **errori di assemblaggio** e **errori a runtime** (divisione per zero, ciclo infinito…) sono segnati direttamente, anche
+  nell'emulatore;
+- per gli **errori logici** si usa una *riparazione per mutazione*: per ogni istruzione si provano piccole modifiche
+  plausibili (altra condizione di salto, `ADD`↔`SUB`, altro registro, costante ±1/×2/÷2, operandi invertiti, altra
+  variabile, istruzione tolta) e si riesegue la batteria di test. Se **una sola** modifica a una riga fa passare tutti i
+  test, quella riga è la colpevole ("Riga sbagliata"); il suggerimento con la modifica è nascosto dietro un pulsante;
+- se più righe sono sbagliate e nessuna modifica singola basta, si indica la riga che migliora di più oppure quella che
+  scrive nella variabile (o stampa) il valore sbagliato.
+
 ### Verifica dei test (`npm test`)
 
 - ogni esercizio: la soluzione di riferimento supera **tutti** i casi base e automatici;

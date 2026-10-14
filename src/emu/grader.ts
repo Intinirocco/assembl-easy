@@ -91,6 +91,10 @@ function fmtBytes(bytes: number[], unit: number, asString: boolean): string {
 export interface GradeOptions {
   /** mnemonici che il programma deve contenere (es. ['call', 'ret']) */
   requires?: string[];
+  /** limite di istruzioni per caso (predefinito 100.000) */
+  maxSteps?: number;
+  /** si ferma dopo tanti casi falliti (serve a scartare in fretta le varianti peggiori) */
+  maxFailures?: number;
 }
 
 function fmtScalar(v: Scalar): string {
@@ -129,7 +133,11 @@ export function gradeProgram(source: string, tests: TestCase[], opts: GradeOptio
     });
   }
   let timeouts = 0;
+  let failures = 0;
+  const maxSteps = opts.maxSteps ?? MAX_STEPS;
+  const m = new Machine(prog, { record: false }); // una sola macchina: reset() è molto più leggero
   for (const t of tests) {
+    if (opts.maxFailures !== undefined && failures > opts.maxFailures) break;
     const details: string[] = [];
     const group = t.group ?? 'base';
     const info = describeCase(t.init, t.input);
@@ -146,7 +154,7 @@ export function gradeProgram(source: string, tests: TestCase[], opts: GradeOptio
       });
       continue;
     }
-    const m = new Machine(prog, { record: false });
+    m.reset();
     // valori iniziali
     for (const [name, val] of Object.entries(t.init ?? {})) {
       const loc = symbolAddr(prog, name);
@@ -154,11 +162,11 @@ export function gradeProgram(source: string, tests: TestCase[], opts: GradeOptio
         details.push(`Il test imposta la variabile "${name}" ma nel programma non esiste: va dichiarata nel segmento dati.`);
         continue;
       }
-      toBytes(val, loc.unit).forEach((b, i) => (m.mem[loc.addr + i] = b));
+      toBytes(val, loc.unit).forEach((b, i) => m.poke(loc.addr + i, b));
     }
     for (const k of (t.input ?? '').replace(/\r?\n/g, '\r')) m.sendKey(k);
 
-    m.run(MAX_STEPS);
+    m.run(maxSteps);
     let runtimeError: string | undefined;
     let errorLine: number | null | undefined;
     if (m.status === 'error') {
@@ -168,7 +176,7 @@ export function gradeProgram(source: string, tests: TestCase[], opts: GradeOptio
       runtimeError = 'Il programma resta in attesa di un input che il test non fornisce (ne legge più del previsto).';
       errorLine = m.currentLine;
     } else if (m.status !== 'halted') {
-      runtimeError = `Il programma non termina entro ${MAX_STEPS.toLocaleString('it-IT')} istruzioni (ciclo infinito?).`;
+      runtimeError = `Il programma non termina entro ${maxSteps.toLocaleString('it-IT')} istruzioni (ciclo infinito?).`;
       errorLine = m.currentLine;
       timeouts++;
     }
@@ -213,6 +221,7 @@ export function gradeProgram(source: string, tests: TestCase[], opts: GradeOptio
         pos = i + frag.length;
       }
     }
+    if (details.length) failures++;
     results.push({ name: t.name, group, info, passed: details.length === 0, details, output: m.out, runtimeError, errorLine });
   }
   return {
