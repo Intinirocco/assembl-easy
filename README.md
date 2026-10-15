@@ -64,10 +64,14 @@ La correzione è **deterministica e senza servizi esterni**: nessun costo e ness
 
 - Formato classico di emu8086: `data segment … ends`, `stack segment`, `code segment`, `start:`, `end start`
   (e le direttive semplificate `.data`, `.code`, `.stack`).
+- **Formato COM** degli esempi di emu8086: `name "…"`, `org 100h`, nessun segmento, dati dopo il codice (anche
+  con `jmp` per saltarli), uscita con `ret`, `end` senza etichetta (il testo dopo `end` è ignorato). CS = DS = ES = SS,
+  codice a partire da `0100h`, `SP = FFFEh`.
 - Direttive: `DB`, `DW`, `DD`, `DUP`, `?`, `EQU`, `ORG`, `PROC`/`ENDP`, `OFFSET`.
 - Istruzioni: `MOV`, `XCHG`, `LEA`, `PUSH`, `POP`, aritmetiche e logiche, `MUL`/`DIV` (anche con segno),
   scorrimenti e rotazioni, tutti i salti condizionati, `LOOP`, `CALL`/`RET`, istruzioni su stringhe con `REP`.
-- Interruzioni: `INT 21h` (funzioni 01h, 02h, 06h, 07h, 08h, 09h, 0Ah, 0Bh, 4Ch), `INT 20h`, `INT 10h` base.
+- Interruzioni: `INT 21h` (funzioni 01h, 02h, 06h, 07h, 08h, 09h, 0Ah, 0Bh, 4Ch), `INT 20h`, `INT 10h` base
+  (AH = 0, 0Eh), `INT 16h` (tastiera: AH = 0, 1, 2). Inoltre `PUSHA` / `POPA`.
 - `include 'emu8086.inc'`: `DEFINE_SCAN_NUM`, `DEFINE_PRINT_NUM`, `DEFINE_PRINT_NUM_UNS`,
   `DEFINE_CLEAR_SCREEN`, `PRINT`, `PRINTN`, `PUTC`.
 

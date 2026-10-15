@@ -681,6 +681,30 @@ export class Machine {
       }
       throw new CpuError(`INT 10h, funzione AH=${ah.toString(16).toUpperCase()}h non supportata`);
     }
+    if (n === 0x16) {
+      // tastiera (BIOS)
+      switch (ah) {
+        case 0x00:
+        case 0x10: {
+          const k = this.nextKey();
+          if (k === null) return false;
+          const c = k === '\n' ? '\r' : k;
+          this.regs[0] = c.charCodeAt(0) & 0xff; // AL = ASCII, AH = 0
+          return true;
+        }
+        case 0x01:
+        case 0x11:
+          if (this.input.length) {
+            this.flags &= ~ZF;
+            this.regs[0] = this.input[0].charCodeAt(0) & 0xff;
+          } else this.flags |= ZF;
+          return true;
+        case 0x02:
+          this.setReg(0, 8, 0);
+          return true;
+      }
+      throw new CpuError(`INT 16h, funzione AH=${ah.toString(16).toUpperCase()}h non supportata`);
+    }
     if (n !== 0x21) throw new CpuError(`INT ${n.toString(16).toUpperCase()}h non supportata`);
 
     switch (ah) {
@@ -806,6 +830,19 @@ export class Machine {
       }
       case 'push': this.push(this.get(ops[0], 16)); return true;
       case 'pop': this.set(ops[0], 16, this.pop()); return true;
+      case 'pusha': {
+        const sp0 = this.regs[4];
+        for (const i of [0, 1, 2, 3]) this.push(this.regs[i]); // AX CX DX BX
+        this.push(sp0);
+        for (const i of [5, 6, 7]) this.push(this.regs[i]); // BP SI DI
+        return true;
+      }
+      case 'popa': {
+        for (const i of [7, 6, 5]) this.regs[i] = this.pop(); // DI SI BP
+        this.pop(); // SP salvato: ignorato
+        for (const i of [3, 2, 1, 0]) this.regs[i] = this.pop(); // BX DX CX AX
+        return true;
+      }
       case 'pushf': this.push(this.flags); return true;
       case 'popf': this.flags = this.pop() | 0x0002; return true;
       case 'add': case 'adc': case 'sub': case 'sbb': case 'and': case 'or': case 'xor':
@@ -890,6 +927,10 @@ export class Machine {
         return true;
       }
       case 'ret': {
+        if (ops.length === 0 && this.regs[4] === (this.program.stackSP & 0xffff)) {
+          this.haltedFlag = true; // RET dal programma principale: ritorno al sistema operativo
+          return true;
+        }
         this.ip = this.pop();
         if (ops.length) this.regs[4] = (this.regs[4] + (ops[0] as { value: number }).value) & 0xffff;
         return true;

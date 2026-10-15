@@ -9,6 +9,9 @@ import ex1 from '../examples/somma-sottrazione.asm?raw';
 import ex2 from '../examples/input-moltiplicazione.asm?raw';
 import ex3 from '../examples/scan-print-num.asm?raw';
 import ex4 from '../examples/memoria-diretta.asm?raw';
+import com1 from '../examples/com-add-sub.asm?raw';
+import com2 from '../examples/com-hello.asm?raw';
+import com3 from '../examples/com-calc-sum.asm?raw';
 
 const FILE_EXAMPLES: [string, string][] = [
   ['Template vuoto', template],
@@ -16,6 +19,9 @@ const FILE_EXAMPLES: [string, string][] = [
   ['Input e moltiplicazione', ex2],
   ['scan_num / print_num', ex3],
   ['Accesso diretto alla memoria', ex4],
+  ['Formato COM: add-sub (binario)', com1],
+  ['Formato COM: hello (int 10h)', com2],
+  ['Formato COM: calc-sum (procedura)', com3],
 ];
 
 // Il gestore di pannelli stacca dal DOM i pannelli in schede non attive: si conservano
@@ -678,6 +684,9 @@ function compile(): boolean {
   }
   messages.innerHTML = '';
   machine = new Machine(program);
+  // programmi in formato COM (org 100h): codice e dati iniziano a 0100h, non a 0000h
+  const memOff = $<HTMLInputElement>('mem-off');
+  if (program.entryIP >= 0x100 && /^0*$/.test(memOff.value)) memOff.value = hex(program.entryIP & 0xfff0, 4);
   prevRegs = machine.regs.slice();
   prevSegs = machine.segs.slice();
   prevIp = machine.ip;

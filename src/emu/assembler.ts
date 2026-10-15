@@ -46,6 +46,8 @@ export interface Segment {
   base: number; // paragrafo (segmento) di caricamento
   size: number;
   bytes: Uint8Array;
+  /** offset di inizio del codice (ORG): 100h nei programmi in formato COM */
+  origin?: number;
 }
 
 export interface Symbol {
@@ -95,7 +97,7 @@ const LOOPS = ['loop', 'loope', 'loopz', 'loopne', 'loopnz'];
 const NO_OPS = [
   'nop', 'hlt', 'ret', 'retf', 'iret', 'clc', 'stc', 'cmc', 'cld', 'std', 'cli', 'sti', 'cbw',
   'cwd', 'pushf', 'popf', 'lahf', 'sahf', 'xlat', 'xlatb', 'movsb', 'movsw', 'cmpsb', 'cmpsw',
-  'stosb', 'stosw', 'lodsb', 'lodsw', 'scasb', 'scasw', 'into',
+  'stosb', 'stosw', 'lodsb', 'lodsw', 'scasb', 'scasw', 'into', 'pusha', 'popa',
 ];
 const ONE_OP = [
   'push', 'pop', 'inc', 'dec', 'neg', 'not', 'mul', 'imul', 'div', 'idiv', 'call', 'int',
@@ -329,6 +331,16 @@ export function assemble(source: string): Program {
   let entryLabel: string | null = null;
   let procDepth: string[] = [];
   const consts = new Evaluator(symbols, false);
+  // formato COM di emu8086: niente segmenti, `org 100h`, dati dopo il codice
+  let ended = false; // dopo `end` il resto del file è ignorato
+  let explicitSeg = false; // è comparsa una direttiva di segmento (formato EXE)
+  const origins = new Map<string, number>();
+  const toImplicit = (what: string) => {
+    if (curSeg) return;
+    if (explicitSeg) throw new AsmErr(`${what} fuori da un segmento`);
+    ensureSeg('#com', 'code');
+    curSeg = '#com';
+  };
 
   const ensureSeg = (name: string, kind: Segment['kind']) => {
     if (!segSizes.has(name)) {
@@ -353,9 +365,12 @@ export function assemble(source: string): Program {
   srcLines.forEach((raw, i) => {
     const no = i + 1;
     let s = stripComment(raw).trim();
-    if (!s) return;
+    if (ended || !s) return;
 
     try {
+      // name "programma": solo un'etichetta del programma
+      if (/^name\s+(["']).*\1\s*$/i.test(s)) return;
+
       // include
       if (/^include\b/i.test(s)) {
         if (/emu8086\.inc/i.test(s)) includeSeen = true;
@@ -374,6 +389,7 @@ export function assemble(source: string): Program {
       // .model / .stack / .data / .code (sintassi semplificata)
       let m = /^\.(model|stack|data|code)\b\s*(.*)$/i.exec(s);
       if (m) {
+        explicitSeg = true;
         const d = m[1].toLowerCase();
         if (d === 'model') return;
         if (d === 'stack') {
@@ -392,6 +408,7 @@ export function assemble(source: string): Program {
       // name segment / segment name
       m = /^([A-Za-z_]\w*)\s+segment\b/i.exec(s);
       if (m) {
+        explicitSeg = true;
         const nm = m[1].toLowerCase();
         const kind: Segment['kind'] = /stack/.test(nm) ? 'stack' : /code|cs/.test(nm) ? 'code' : 'data';
         ensureSeg(nm, kind);
@@ -407,20 +424,23 @@ export function assemble(source: string): Program {
       m = /^end(?:\s+([A-Za-z_]\w*))?\s*$/i.exec(s);
       if (m) {
         if (m[1]) entryLabel = m[1].toLowerCase();
+        ended = true;
         return;
       }
       // org
       m = /^org\s+(.+)$/i.exec(s);
       if (m) {
-        if (!curSeg) throw new AsmErr('ORG fuori da un segmento');
-        segSizes.set(curSeg, consts.eval(m[1]).value);
+        toImplicit('ORG');
+        const v = consts.eval(m[1]).value;
+        if ((segSizes.get(curSeg!) ?? 0) === 0 && !origins.has(curSeg!)) origins.set(curSeg!, v);
+        segSizes.set(curSeg!, v);
         return;
       }
       // proc / endp
       m = /^([A-Za-z_]\w*)\s+proc\b/i.exec(s);
       if (m) {
-        if (!curSeg) throw new AsmErr('PROC fuori da un segmento');
-        defSymbol(no, m[1], { type: 'code', seg: curSeg, value: segSizes.get(curSeg) ?? 0 });
+        toImplicit('PROC');
+        defSymbol(no, m[1], { type: 'code', seg: curSeg!, value: segSizes.get(curSeg!) ?? 0 });
         procDepth.push(m[1]);
         return;
       }
@@ -440,8 +460,8 @@ export function assemble(source: string): Program {
       let rest = s;
       m = /^([A-Za-z_.@$?][\w.@$?]*)\s*:\s*(.*)$/.exec(s);
       if (m) {
-        if (!curSeg) throw new AsmErr('Etichetta fuori da un segmento');
-        defSymbol(no, m[1], { type: 'code', seg: curSeg, value: segSizes.get(curSeg) ?? 0 });
+        toImplicit('Etichetta');
+        defSymbol(no, m[1], { type: 'code', seg: curSeg!, value: segSizes.get(curSeg!) ?? 0 });
         rest = m[2].trim();
         if (!rest) return;
       }
@@ -449,24 +469,24 @@ export function assemble(source: string): Program {
       // dati: [nome] db|dw|dd ...
       m = /^(?:([A-Za-z_.@$?][\w.@$?]*)\s+)?(db|dw|dd)\b\s*(.*)$/i.exec(rest);
       if (m && !(m[1] && MNEMONICS.has(m[1].toLowerCase()))) {
-        if (!curSeg) throw new AsmErr('Definizione dati fuori da un segmento');
+        toImplicit('Definizione dati');
         const dir = m[2].toLowerCase() as 'db' | 'dw' | 'dd';
         const unit = dir === 'db' ? 1 : dir === 'dw' ? 2 : 4;
         if (!m[3].trim()) throw new AsmErr(`${dir.toUpperCase()} senza valori`);
-        const off = segSizes.get(curSeg) ?? 0;
-        const sym: Symbol = { type: 'data', seg: curSeg, value: off, size: unit as 1 | 2 | 4, text: /["']/.test(m[3]) };
+        const off = segSizes.get(curSeg!) ?? 0;
+        const sym: Symbol = { type: 'data', seg: curSeg!, value: off, size: unit as 1 | 2 | 4, text: /["']/.test(m[3]) };
         if (m[1]) defSymbol(no, m[1], sym);
         const size = dataSize(m[3], unit, consts);
         sym.length = size;
-        lines.push({ no, seg: curSeg, offset: off, kind: 'data', name: m[1], directive: dir, body: m[3], size });
+        lines.push({ no, seg: curSeg!, offset: off, kind: 'data', name: m[1], directive: dir, body: m[3], size });
         advance(size);
         return;
       }
 
       // istruzione
-      if (!curSeg) throw new AsmErr('Istruzione fuori da un segmento');
+      toImplicit('Istruzione');
       const size = estimateSize(rest);
-      lines.push({ no, seg: curSeg, offset: segSizes.get(curSeg) ?? 0, kind: 'instr', body: rest, size });
+      lines.push({ no, seg: curSeg!, offset: segSizes.get(curSeg!) ?? 0, kind: 'instr', body: rest, size });
       advance(size);
     } catch (e) {
       if (e instanceof AsmErr) err(no, e.message);
@@ -482,7 +502,7 @@ export function assemble(source: string): Program {
     let size = segSizes.get(so.name) ?? 0;
     if (so.kind === 'stack' && size === 0) size = 256;
     const padded = Math.max(16, (size + 15) & ~15);
-    segments.push({ name: so.name, kind: so.kind, base: paragraph, size, bytes: new Uint8Array(padded) });
+    segments.push({ name: so.name, kind: so.kind, base: paragraph, size, bytes: new Uint8Array(padded), origin: origins.get(so.name) });
     const sym = symbols.get(so.name);
     if (sym) sym.value = paragraph;
     paragraph += padded >> 4;
@@ -539,7 +559,7 @@ export function assemble(source: string): Program {
     const code = segments.find((s) => s.kind === 'code');
     if (code) {
       entryCS = code.base;
-      entryIP = 0;
+      entryIP = code.origin ?? 0;
     }
   }
   if (!segments.some((s) => s.kind === 'code') && errors.length === 0)
